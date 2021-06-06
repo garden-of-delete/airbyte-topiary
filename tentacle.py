@@ -6,6 +6,8 @@ TODO LIST:
 - (done) Implement "check" routes for source and destination validation
 - Implement the connection routes, dto class, and all associated functions
 - Finalize the yaml to deployment workflow
+    - (done) Add print statements to create_source and create_destination
+    - Add ability for user to override workspace slug
     - Address modification of existing sources and destinations
     - Print logable info to stdout
     - Add a function to each dto to enable self-validation
@@ -75,14 +77,14 @@ def main(args):
         airbyte_model.connections[connection_dto.connection_id] = connection_dto
 
     # sync yaml to deployment
-    if (args.wipe):
+    if args.wipe:
         airbyte_model.full_wipe(client)
 
-    for source in new_dtos['sources']:
-        if source.source_id is None:
-            response = client.create_source(source)
+    for new_source in new_dtos['sources']:
+        if new_source.source_id is None:
+            response = client.create_source(new_source)
             source_dto = dto_factory.build_source_dto(response)
-            airbyte_model.sources[source_dto.source_id] = source_dto
+            airbyte_model.sources[new_source.source_id] = new_source
         else:
             pass  # TODO: modify existing source
     for destination in new_dtos['destinations']:

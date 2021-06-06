@@ -62,8 +62,15 @@ class AirbyteClient:
                    'connectionConfiguration': source_dto.connection_configuration,
                    'name': source_dto.name}
         r = requests.post(route, json=payload)
-        source_dto.source_id = r.json()
-        return r.json()
+        if r.status_code == 200:
+            source_dto.source_id = r.json()['sourceId']
+            print("Created source: " + r.json()['sourceId'])
+            return r.json()
+        elif r.status_code == 422:
+            print("AirbyteClient.create_source : Invalid input")
+        else:
+            print("AirbyteClient.create_source : Unrecognized response code " + str(r.status_code))
+
 
     def delete_source(self, source_dto):
         """Route: POST /v1/sources/delete"""
@@ -85,7 +92,7 @@ class AirbyteClient:
         pass
 
     def check_destination_connection(self, destination_dto):
-        """(Route: POST /v1/destinations/check_connection"""
+        """Route: POST /v1/destinations/check_connection"""
         route = self.airbyte_url + 'api/v1/destinations/check_connection'
         payload = {'destinationId': destination_dto.destination_id}
         r = requests.post(route, json=payload)
@@ -101,7 +108,14 @@ class AirbyteClient:
                    'connectionConfiguration': destination_dto.connection_configuration,
                    'name': destination_dto.name}
         r = requests.post(route, json=payload)
-        return r.json()
+        if r.status_code == 200:
+            destination_dto.destination_id = r.json()['destinationId']
+            print("Created destination: " + r.json()['destinationId'])
+            return r.json()
+        elif r.status_code == 422:
+            print("AirbyteClient.create_destination : Invalid input")
+        else:
+            print("AirbyteClient.create_destination : Unrecognized response code " + str(r.status_code))
 
     def delete_destination(self, destination_dto):
         """Route: POST /v1/destinations/delete"""
