@@ -46,7 +46,7 @@ class AirbyteClient:
         return r.json()
 
     def check_source_connection(self):
-        """(LOW PRIO) Route: POST /v1/sources/check_connection"""
+        """Route: POST /v1/sources/check_connection"""
         pass
 
     def create_source(self, source_dto):

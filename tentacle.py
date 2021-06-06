@@ -1,6 +1,24 @@
 #!/usr/bin/env python3
 """
 This is a simple, open-source tool designed to help manage Airbyte deployments at scale through via the API.
+
+TODO LIST:
+- Implement "check" routes for source and destination validation
+- Implement the connection routes, dto class, and all associated functions
+- Finalize the yaml to deployment workflow
+    - Address modification of existing sources and destinations
+    - Print logable info to stdout
+    - Add a function to each dto to enable self-validation
+    - Clarify all arg processor functions related to this workflow
+    - implement validate changes option
+    - (Stretch): modification of connections
+- Deployment to yaml workflow
+- Deployment to deployment workflow
+- Wipe target workflow
+- Readme
+- License
+- Tests!
+- Linter?
 """
 
 __author__ = "Robert Stolz"
