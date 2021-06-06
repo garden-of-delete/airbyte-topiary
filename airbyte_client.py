@@ -1,9 +1,9 @@
 import requests
 
-class Airbyte:
+class AirbyteClient:
     """Airbyte interface"""
-    def __init__(self, config):
-        self.airbyte_url = config.url.strip('/') + '/'
+    def __init__(self, url):
+        self.airbyte_url = url.strip('/') + '/'  # TODO: a little awkward
         self.workspace_slug = "default"
         self.workspace_uuid = self.get_workspace_by_slug(self.workspace_slug)['workspaceId']
 
