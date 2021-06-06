@@ -6,10 +6,10 @@ class AirbyteConfigModel:
         self.workspaces = {}
         self.global_config = {}
 
-    def write_model_to_yaml(self, filename):
+    def write_yaml(self, filename):
         pass
 
-    def apply_model_to_deployment(self, client):
+    def apply_to_deployment(self, client):
         pass
 
     def full_wipe(self, client):
@@ -37,3 +37,13 @@ class AirbyteConfigModel:
                 print("AirbyteConfigModel.wipe_destinations : Unable to delete destination: " + repr(destination))
         for destination_id in removed:
             self.destinations.pop(destination_id)
+
+    def validate(self, client):
+        '''this function validates the model and all included connectors'''
+        for source in self.sources.values():
+            response = client.check_source_connection(source)
+            print(response['jobInfo']['id'] + ": source validated " + repr(response['jobInfo']['succeeded']))
+        for destination in self.destinations.values():
+            response = client.check_destination_connection(destination)
+            print(response['jobInfo']['id'] + ": destination validated " + repr(response['jobInfo']['succeeded']))
+            pass

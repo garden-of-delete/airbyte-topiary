@@ -3,7 +3,7 @@
 This is a simple, open-source tool designed to help manage Airbyte deployments at scale through via the API.
 
 TODO LIST:
-- Implement "check" routes for source and destination validation
+- (done) Implement "check" routes for source and destination validation
 - Implement the connection routes, dto class, and all associated functions
 - Finalize the yaml to deployment workflow
     - Address modification of existing sources and destinations
@@ -12,13 +12,17 @@ TODO LIST:
     - Clarify all arg processor functions related to this workflow
     - implement validate changes option
     - (Stretch): modification of connections
+- Restructure main method
+- Update deployment workflow
 - Deployment to yaml workflow
 - Deployment to deployment workflow
 - Wipe target workflow
 - Readme
 - License
 - Tests!
-- Linter?
+- Post 0.1.0
+    - Linter?
+    - Multiple workspaces
 """
 
 __author__ = "Robert Stolz"
@@ -62,7 +66,7 @@ def main(args):
     # send configured_sources to the factory to build sourceDtos
     for source in configured_sources:
         source_dto = dto_factory.build_source_dto(source)
-        airbyte_model.sources[source_dto.source_id] = source_dto  # TODO: Refactor airbyte_model -> airbyte_model
+        airbyte_model.sources[source_dto.source_id] = source_dto
     for destination in configured_destinations:
         destination_dto = dto_factory.build_destination_dto(destination)
         airbyte_model.destinations[destination_dto.destination_id] = destination_dto
@@ -75,13 +79,23 @@ def main(args):
         airbyte_model.full_wipe(client)
 
     for source in new_dtos['sources']:
-        if source.source_id == None:
-            client.create_source(source)
+        if source.source_id is None:
+            response = client.create_source(source)
+            source_dto = dto_factory.build_source_dto(response)
+            airbyte_model.sources[source_dto.source_id] = source_dto
         else:
             pass  # TODO: modify existing source
     for destination in new_dtos['destinations']:
-        if destination.destination_id == None:
-            client.create_destination(destination)
+        if destination.destination_id is None:
+            response = client.create_destination(destination)
+            destination_dto = dto_factory.build_destination_dto(response)
+            airbyte_model.destinations[destination_dto.destination_id] = destination_dto
+        else:
+            pass  # TODO: modify existing destination
+
+    # validate changes
+    if args.validate or args.mode == 'validate':
+        airbyte_model.validate(client)
 
     # sync deployment to yaml
     # airbyte_model.write_to_yaml()
@@ -96,7 +110,7 @@ if __name__ == "__main__":
 
     # Required positional argument
     #parser.add_argument("arg", help="Required positional argument")
-    parser.add_argument("mode", help="Operating mode. Choices are sync, sync-all, wipe")
+    parser.add_argument("mode", help="Operating mode. Choices are sync, sync-all, wipe, update")
     parser.add_argument("source", help="location of the source Airbyte deployment or yaml file")
 
     # Optional argument flag which defaults to False
@@ -104,8 +118,6 @@ if __name__ == "__main__":
                         help="deletes all connectors on the target")
     parser.add_argument("-v", "--validate", action="store_true", default=False,
                         help="validates all connectors on the destination after applying changes")
-    parser.add_argument("-vc", "--validate-changes", action="store_true", default=False,
-                        help="validates changed connectors after applying changes, a subset of --validate")
 
     # Optional argument which requires a parameter (eg. -d test)
     parser.add_argument("-d", "--destination", action="store", dest="destination",

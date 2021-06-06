@@ -5,7 +5,7 @@ class AirbyteClient:
     def __init__(self, url):
         self.airbyte_url = url.strip('/') + '/'  # TODO: a little awkward
         self.workspace_slug = "default"
-        self.workspace_uuid = self.get_workspace_by_slug(self.workspace_slug)['workspaceId']
+        self.workspace_uuid = self.get_workspace_by_slug(self.workspace_slug)['workspaceId']  # TODO: move workspace info to AirbyteClientModel
 
     def get_workspace_by_slug(self, slug='default'):
         """Route: POST /v1/workspaces/get_by_slug"""
@@ -45,9 +45,14 @@ class AirbyteClient:
         r = requests.post(route)
         return r.json()
 
-    def check_source_connection(self):
+    def check_source_connection(self, source_dto):
         """Route: POST /v1/sources/check_connection"""
-        pass
+        route = self.airbyte_url + 'api/v1/sources/check_connection'
+        payload = {'sourceId': source_dto.source_id}
+        r = requests.post(route, json=payload)
+        if r.status_code == '404':
+            print(source_dto.source_id + ': Unable to validate, source not found')
+        return r.json()
 
     def create_source(self, source_dto):
         """ Route: POST /v1/sources/create"""
@@ -58,7 +63,7 @@ class AirbyteClient:
                    'name': source_dto.name}
         r = requests.post(route, json=payload)
         source_dto.source_id = r.json()
-        return r.status_code
+        return r.json()
 
     def delete_source(self, source_dto):
         """Route: POST /v1/sources/delete"""
@@ -79,9 +84,14 @@ class AirbyteClient:
         """Route: POST /v1/sources/update"""
         pass
 
-    def check_destination_connection(self):
-        """(LOW PRIO) Route: POST /v1/destinations/check_connection"""
-        pass
+    def check_destination_connection(self, destination_dto):
+        """(Route: POST /v1/destinations/check_connection"""
+        route = self.airbyte_url + 'api/v1/destinations/check_connection'
+        payload = {'destinationId': destination_dto.destination_id}
+        r = requests.post(route, json=payload)
+        if r.status_code == '404':
+            print(destination_dto.destination_id + ': Unable to validate, destination not found')
+        return r.json()
 
     def create_destination(self, destination_dto):
         """ Route: POST /v1/destinations/create"""
@@ -91,7 +101,7 @@ class AirbyteClient:
                    'connectionConfiguration': destination_dto.connection_configuration,
                    'name': destination_dto.name}
         r = requests.post(route, json=payload)
-        return r.status_code
+        return r.json()
 
     def delete_destination(self, destination_dto):
         """Route: POST /v1/destinations/delete"""
