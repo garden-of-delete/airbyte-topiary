@@ -9,7 +9,6 @@ TODO LIST:
     - (done) Add print statements to create_source and create_destination
     - Add ability for user to override workspace slug
     - Address modification of existing sources and destinations
-    - Print logable info to stdout
     - Add a function to each dto to enable self-validation
     - Clarify all arg processor functions related to this workflow
     - implement validate changes option
@@ -54,16 +53,19 @@ def main(args):
     available_destinations = client.get_destination_definitions()
     #initialize data transfer object factory
     dto_factory = AirbyteDtoFactory(available_sources, available_destinations)
+    print("main: retrieved source and destination definitions from: " + client.airbyte_url)
 
     #get config from config.yml
     yaml_config = yaml.safe_load(open("config.yml", 'r'))
     secrets = yaml.safe_load(open("secrets.yml", 'r'))
     new_dtos = dto_factory.build_dtos_from_yaml_config(yaml_config, secrets)
+    print("main: read configuration from source yaml")
 
     # get configured connectors and connections from Airbyte API
     configured_sources = client.get_configured_sources(workspace)
     configured_destinations = client.get_configured_destinations(workspace)
     configured_connections = client.get_configured_connections(workspace)
+    print("main: retrieved configuration from: " + client.airbyte_url)
 
     # send configured_sources to the factory to build sourceDtos
     for source in configured_sources:
@@ -78,8 +80,10 @@ def main(args):
 
     # sync yaml to deployment
     if args.wipe:
+        print("Wiping deployment: " + client.airbyte_url)
         airbyte_model.full_wipe(client)
 
+    print("Applying changes to deployment: " + client.airbyte_url)
     for new_source in new_dtos['sources']:
         if new_source.source_id is None:
             response = client.create_source(new_source)
@@ -95,8 +99,9 @@ def main(args):
         else:
             pass  # TODO: modify existing destination
 
-    # validate changes
+    # validate
     if args.validate or args.mode == 'validate':
+        print("Validating connectors...")
         airbyte_model.validate(client)
 
     # sync deployment to yaml

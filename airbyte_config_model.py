@@ -42,8 +42,8 @@ class AirbyteConfigModel:
         '''this function validates the model and all included connectors'''
         for source in self.sources.values():
             response = client.check_source_connection(source)
-            print(response['jobInfo']['id'] + ": source validated " + repr(response['jobInfo']['succeeded']))
+            print("Source is valid: " + response['jobInfo']['id'] + ' ' + repr(response['jobInfo']['succeeded']))
         for destination in self.destinations.values():
             response = client.check_destination_connection(destination)
-            print(response['jobInfo']['id'] + ": destination validated " + repr(response['jobInfo']['succeeded']))
+            print("destination is valid: " + response['jobInfo']['id'] + ' ' + repr(response['jobInfo']['succeeded']))
             pass
