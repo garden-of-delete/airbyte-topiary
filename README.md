@@ -28,6 +28,8 @@ In all cases, a configuration origin, which follows the `sync` command, and a `-
 
 Tentacle will use the .yaml or .yml file extensions following the `source` and `--target` arguments to choose the right sync workflow.
 
+During setup, Airbyte creates a default workspace called 'default'. Tentacle allows the user to specify an alternative existing workspace by name using the `--workspace` argument, followed by the name of the workspace.
+
 These optional arguments can be used in combination to define what to apply the sync operation to:
 - `--sources`
 - `--destinations`
