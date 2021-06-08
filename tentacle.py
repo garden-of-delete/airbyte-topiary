@@ -11,6 +11,7 @@ TODO LIST:
     - Address modification of existing sources and destinations
     - Clarify all arg processor functions related to this workflow
     - implement validate changes option
+    - implement the --dump option
     - (Stretch): modification of connections
 - (partially done) Restructure main method
 - Update deployment workflow

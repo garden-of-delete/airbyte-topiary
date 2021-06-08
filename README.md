@@ -1,7 +1,8 @@
 # Airbyte Tentacle
-Purpose
+This software exists for a reason.
 
 ## Releases
+There will eventually be a release.
 
 ## Setup
 1. Clone this repo to your working environment
@@ -19,9 +20,13 @@ Activate the environment with `. .venv/bin/activate`
 Airbyte tentacle supports a number of workflows designed to make managing Airbyte deployments at scale easier. Tentacle uses the .yml or .yaml
 
 ### The Sync Workflows
-All the sync workflows described below are accessed through the **sync** master mode.
+All the sync workflows described below are accessed through the **sync** master mode like so:
+
+`python tentacle.py sync`
 
 In all cases, a configuration origin, which follows the `sync` command, and a `--target` are required.
+
+Tentacle will use the .yaml or .yml file extensions following the `source` and `--target` arguments to choose the right sync workflow.
 
 These optional arguments can be used in combination to define what to apply the sync operation to:
 - `--sources`
@@ -29,12 +34,13 @@ These optional arguments can be used in combination to define what to apply the 
 - `--connections`
 - `--all` (same as `--sources --destinations --connections`)
 
-Note if none of these arguments are given, no changes will be made to the `--destination`.
+**Note:** if none of the four optional arguments above are given, no changes will be made to the `--target`.
 
 **Sync yaml to deployment**
 The yaml to deployment workflow takes a .yaml file as the origin and applies the configuration contained within to a destination Airbyte deployment.
 
 Basic usage could be something like:
+
 `python tentacle.py sync config.yml --target http://123.456.789.0:8081 --all`
 
 Almost all sources and destinations will have associated secrets. Tentacle ignores any secrets specified in the source config.yml. Secrets are specified separately using the `--secrets` argument, followed by a .yaml file. For example:
@@ -48,7 +54,11 @@ There are a number of additional optional parameters that modify how a sync oper
 **before** applying the sync operation.
 
 ### Sync Deployment to yaml
-An existing Airby
+An existing Airbyte deployment can be written to a .yaml by following the `--target` argument with a filename having the .yaml or .yml extension. For example:
+
+`python tentacle.py sync config.yml --target http://123.456.789.0:8081 --all`
+
+Note in this case, no `--secrets` file is specified, since it has no meaning in this workflow. Secrets can't be extracted from the Airbyte API.
 
 ### Sync Deployment to deployment
 
