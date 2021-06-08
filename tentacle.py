@@ -9,11 +9,10 @@ TODO LIST:
     - (done) Add print statements to create_source and create_destination
     - Add ability for user to override workspace slug
     - Address modification of existing sources and destinations
-    - Add a function to each dto to enable self-validation
     - Clarify all arg processor functions related to this workflow
     - implement validate changes option
     - (Stretch): modification of connections
-- Restructure main method
+- (partially done) Restructure main method
 - Update deployment workflow
 - Deployment to yaml workflow
 - Deployment to deployment workflow
@@ -23,7 +22,9 @@ TODO LIST:
 - Tests!
 - Post 0.1.0
     - Linter?
-    - Multiple workspaces
+    - Support for multiple workspaces
+    - Update deployment workflow
+    - Better management of multiple sets of credentials / better secrets management in general
 """
 
 __author__ = "Robert Stolz"
@@ -36,26 +37,36 @@ from airbyte_client import AirbyteClient
 from airbyte_config_model import AirbyteConfigModel
 from airbyte_dto_factory import AirbyteDtoFactory
 
+VALID_MODES = ['wipe', 'update', 'validate', 'sync']
+
 def main(args):
     """ Main entry point of the app """
-
     airbyte_model = AirbyteConfigModel()
-    if args.source.strip().split('.')[-1] == 'yml' or args.source.strip().split('.')[-1] == 'yaml':
-        client = AirbyteClient(args.destination)
-    else:
-        client = AirbyteClient(args.source)
-    # TODO: check to see if destination is also an airbyte deployment
+    if args.mode == 'sync':
+        # if in sync mode and source is a yaml file
+        if args.origin.strip().split('.')[-1] == 'yml' or args.origin.strip().split('.')[-1] == 'yaml':
+            if args.target is None or \
+                    args.target.strip().split('.')[-1] == 'yml' or \
+                    args.target.strip().split('.')[-1] == 'yaml':
+                print("Fatal error: --destination must be followed by a valid "
+                      "Airbyte deployment url when running in any sync mode")
+                exit(2)
+            client = AirbyteClient(args.target)
+        else:  # in sync mode and source is not a yaml file
+            client = AirbyteClient(args.origin)
+    else:  # not in sync mode
+        client = AirbyteClient(args.origin)
 
-    workspace = client.get_workspace_by_slug()
+    workspace = client.get_workspace_by_slug()  # TODO: support for non default workspaces and multiple workspaces
 
-    #get source and destination definitions
+    # get source and destination definitions
     available_sources = client.get_source_definitions()
     available_destinations = client.get_destination_definitions()
-    #initialize data transfer object factory
+    # initialize data transfer object factory
     dto_factory = AirbyteDtoFactory(available_sources, available_destinations)
     print("main: retrieved source and destination definitions from: " + client.airbyte_url)
 
-    #get config from config.yml
+    # get config from config.yml
     yaml_config = yaml.safe_load(open("config.yml", 'r'))
     secrets = yaml.safe_load(open("secrets.yml", 'r'))
     new_dtos = dto_factory.build_dtos_from_yaml_config(yaml_config, secrets)
@@ -66,6 +77,15 @@ def main(args):
     configured_destinations = client.get_configured_destinations(workspace)
     configured_connections = client.get_configured_connections(workspace)
     print("main: retrieved configuration from: " + client.airbyte_url)
+
+    '''
+    # DEBUG
+    dump = {"sources": configured_sources, "destinations": configured_destinations, "connections": configured_connections}
+    outfile = open("config_dump.yml", 'w')
+    yaml.safe_dump({'sources': configured_sources}, outfile)
+    yaml.safe_dump({'destinations': configured_destinations}, outfile)
+    yaml.safe_dump({'connections': configured_connections}, outfile)
+    '''
 
     # send configured_sources to the factory to build sourceDtos
     for source in configured_sources:
@@ -79,25 +99,27 @@ def main(args):
         airbyte_model.connections[connection_dto.connection_id] = connection_dto
 
     # sync yaml to deployment
-    if args.wipe:
+    if args.wipe or args.mode == 'wipe':
         print("Wiping deployment: " + client.airbyte_url)
         airbyte_model.full_wipe(client)
 
     print("Applying changes to deployment: " + client.airbyte_url)
-    for new_source in new_dtos['sources']:
-        if new_source.source_id is None:
-            response = client.create_source(new_source)
-            source_dto = dto_factory.build_source_dto(response)
-            airbyte_model.sources[new_source.source_id] = new_source
-        else:
-            pass  # TODO: modify existing source
-    for destination in new_dtos['destinations']:
-        if destination.destination_id is None:
-            response = client.create_destination(destination)
-            destination_dto = dto_factory.build_destination_dto(response)
-            airbyte_model.destinations[destination_dto.destination_id] = destination_dto
-        else:
-            pass  # TODO: modify existing destination
+    if args.sources or args.all:
+        for new_source in new_dtos['sources']:
+            if new_source.source_id is None:
+                response = client.create_source(new_source)
+                source_dto = dto_factory.build_source_dto(response)
+                airbyte_model.sources[new_source.source_id] = new_source
+            else:
+                pass  # TODO: modify existing source
+    if args.destinations or args.all:
+        for destination in new_dtos['destinations']:
+            if destination.destination_id is None:
+                response = client.create_destination(destination)
+                destination_dto = dto_factory.build_destination_dto(response)
+                airbyte_model.destinations[destination_dto.destination_id] = destination_dto
+            else:
+                pass  # TODO: modify existing destination
 
     # validate
     if args.validate or args.mode == 'validate':
@@ -105,9 +127,12 @@ def main(args):
         airbyte_model.validate(client)
 
     # sync deployment to yaml
+
     # airbyte_model.write_to_yaml()
 
     # deploment to deployment
+
+    # update workflow
 
     pass
 
@@ -117,20 +142,30 @@ if __name__ == "__main__":
 
     # Required positional argument
     #parser.add_argument("arg", help="Required positional argument")
-    parser.add_argument("mode", help="Operating mode. Choices are sync, sync-all, wipe, update")
-    parser.add_argument("source", help="location of the source Airbyte deployment or yaml file")
+    parser.add_argument("mode", help="Operating mode. Choices are sync, validate, wipe, update")
+    parser.add_argument("origin", help="location of the source Airbyte deployment or yaml file")
 
     # Optional argument flag which defaults to False
+    parser.add_argument("-s", "--sources", action="store_true", default=False,
+                        help="sync sources")
+    parser.add_argument("-d", "--destinations", action="store_true", default=False,
+                        help="syncs destinations")
+    parser.add_argument("-c", "--connections", action="store_true", default=False,
+                        help="syncs connections")
+    parser.add_argument("-a", "--all", action="store_true", default=False,
+                        help="syncs sources, destinations, and connections")
     parser.add_argument("-w", "--wipe", action="store_true", default=False,
                         help="deletes all connectors on the target")
     parser.add_argument("-v", "--validate", action="store_true", default=False,
                         help="validates all connectors on the destination after applying changes")
 
     # Optional argument which requires a parameter (eg. -d test)
-    parser.add_argument("-d", "--destination", action="store", dest="destination",
-                        help="specifies the airbyte deployment or yaml file to sync ")
-    parser.add_argument("-a", "--sync-all", action="store_true", default=False)
-
+    parser.add_argument("--target", action="store", dest="target",
+                        help="specifies the airbyte deployment or yaml file to modify")
+    parser.add_argument("--dump", action="store", dest="dump_file",
+                        help="specifies a .yaml file to dump the configuration of the destination before syncing")
+    parser.add_argument("--secrets", action="store", dest="secrets",
+                        help="specifies a .yaml file containing the secrets for each source and destination type")
     # Specify output of "--version"
     parser.add_argument(
         "--version",

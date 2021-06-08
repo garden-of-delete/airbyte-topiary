@@ -1,3 +1,5 @@
+import yaml
+
 class AirbyteConfigModel:
     def __init__(self):
         self.sources = {}

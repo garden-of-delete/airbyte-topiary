@@ -129,9 +129,30 @@ class ConnectionDto:
         self.prefix = None
         self.source_id = None
         self.destination_id = None
-        self.sync_catalog = {}
+        self.sync_catalog = {} # sync_catalog['streams'] is a list of dicts {stream:, config:}
         self.schedule = {}
         self.status = None
+
+class StreamDto:
+    """Data transfer object class for the stream, belongs to the connection abstraction"""
+    def __init__(self):
+        self.name = None
+        self.json_schema = {}
+        self.supported_sync_modes = []
+        self.source_defined_cursor = None
+        self.default_cursor_field = []
+        self.source_defined_primary_key = []
+        self.namespace = None
+
+class StreamConfigDto:
+    """Data transfer object class for the stream configuration, belongs to the connection abstraction"""
+    def __init__(self):
+        self.sync_mode = None
+        self.cursor_field = []
+        self.destination_sync_mode = None
+        self.primary_key = []
+        self.alias_name = None
+        self.selected = None
 
 class WorkspaaceDto:
     """Data transfer object class for Workspace-type Airbyte abstractions"""
