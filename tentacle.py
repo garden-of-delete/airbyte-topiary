@@ -58,7 +58,10 @@ def main(args):
     else:  # not in sync mode
         client = AirbyteClient(args.origin)
 
-    workspace = client.get_workspace_by_slug()  # TODO: support for non default workspaces and multiple workspaces
+    if args.workspace_slug:
+        workspace = client.get_workspace_by_slug(args.workspace_slug)
+    else:
+        workspace = client.get_workspace_by_slug()  # TODO: support for non default workspaces and multiple workspaces
 
     # get source and destination definitions
     available_sources = client.get_source_definitions()
@@ -108,15 +111,15 @@ def main(args):
     if args.sources or args.all:
         for new_source in new_dtos['sources']:
             if new_source.source_id is None:
-                response = client.create_source(new_source)
+                response = client.create_source(new_source, workspace)
                 source_dto = dto_factory.build_source_dto(response)
                 airbyte_model.sources[new_source.source_id] = new_source
             else:
                 pass  # TODO: modify existing source
     if args.destinations or args.all:
-        for destination in new_dtos['destinations']:
-            if destination.destination_id is None:
-                response = client.create_destination(destination)
+        for new_destination in new_dtos['destinations']:
+            if new_destination.destination_id is None:
+                response = client.create_destination(new_destination, workspace)
                 destination_dto = dto_factory.build_destination_dto(response)
                 airbyte_model.destinations[destination_dto.destination_id] = destination_dto
             else:
@@ -167,6 +170,8 @@ if __name__ == "__main__":
                         help="specifies a .yaml file to dump the configuration of the destination before syncing")
     parser.add_argument("--secrets", action="store", dest="secrets",
                         help="specifies a .yaml file containing the secrets for each source and destination type")
+    parser.add_argument("--workspace", action="store", dest="workspace_slug",
+                        help="species the workspace name (slug). Allows use of a non-default workspace")
     # Specify output of "--version"
     parser.add_argument(
         "--version",

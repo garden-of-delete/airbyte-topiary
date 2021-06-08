@@ -4,28 +4,21 @@ class AirbyteClient:
     """Airbyte interface"""
     def __init__(self, url):
         self.airbyte_url = url.strip('/') + '/'  # TODO: a little awkward
-        self.workspace_slug = "default"
-        self.workspace_uuid = self.get_workspace_by_slug(self.workspace_slug)['workspaceId']  # TODO: move workspace info to AirbyteClientModel
+        #self.workspace_slug = "default"
+        #self.workspace_uuid = self.get_workspace_by_slug(self.workspace_slug)['workspaceId']  # TODO: move workspace info to AirbyteClientModel
 
     def get_workspace_by_slug(self, slug='default'):
         """Route: POST /v1/workspaces/get_by_slug"""
         route = self.airbyte_url + 'api/v1/workspaces/get_by_slug'
-        r = requests.post(route, json={"slug": "default"})
+        r = requests.post(route, json={"slug": slug})
         return r.json()
 
-    def get_workspace_by_id(self, workspace_uuid=None):
+    def get_workspace_by_id(self, workspace_uuid):
         """(LOW PRIO) Route: POST /v1/workspaces/get"""
         uuid = None
-        if workspace_uuid:
-            uuid = workspace_uuid
-        elif self.workspace_uuid:
-            uuid = self.workspace_uuid
-        else:
-            return
         route = self.airbyte_url + 'api/v1/workspaces/get'
         r = requests.post(route, json={"workspace_id": uuid})
         return r.json()
-        pass
 
     def get_source_definitions(self):
         """Route: /v1/source_definitions/list"""
@@ -54,11 +47,11 @@ class AirbyteClient:
             print(source_dto.source_id + ': Unable to validate, source not found')
         return r.json()
 
-    def create_source(self, source_dto):
+    def create_source(self, source_dto, workspace):
         """ Route: POST /v1/sources/create"""
         route = self.airbyte_url + 'api/v1/sources/create'
         payload = {'sourceDefinitionId': source_dto.source_definition_id,
-                   'workspaceId': self.workspace_uuid,
+                   'workspaceId': workspace['workspaceId'],
                    'connectionConfiguration': source_dto.connection_configuration,
                    'name': source_dto.name}
         r = requests.post(route, json=payload)
@@ -100,11 +93,11 @@ class AirbyteClient:
             print(destination_dto.destination_id + ': Unable to validate, destination not found')
         return r.json()
 
-    def create_destination(self, destination_dto):
+    def create_destination(self, destination_dto, workspace):
         """ Route: POST /v1/destinations/create"""
         route = self.airbyte_url + 'api/v1/destinations/create'
         payload = {'destinationDefinitionId': destination_dto.destination_definition_id,
-                   'workspaceId': self.workspace_uuid,
+                   'workspaceId': workspace['workspaceId'],
                    'connectionConfiguration': destination_dto.connection_configuration,
                    'name': destination_dto.name}
         r = requests.post(route, json=payload)
