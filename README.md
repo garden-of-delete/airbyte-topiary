@@ -17,6 +17,8 @@ Activate the environment with `. .venv/bin/activate`
 ## Configuration as YAML
 Airbyte tentacle allows configuration for an airbyte deployment to be moved to and from yaml files through interaction with the Airbyte API.
 
+There will be a guide here that explains the config spec with examples.
+
 ## Workflows
 Airbyte tentacle supports a number of workflows designed to make managing Airbyte deployments at scale easier. Tentacle uses the .yml or .yaml
 
@@ -40,6 +42,7 @@ These optional arguments can be used in combination to define what to apply the 
 **Note:** if none of the four optional arguments above are given, no changes will be made to the `--target`.
 
 **Sync yaml to deployment**
+
 The yaml to deployment workflow takes a .yaml file as the origin and applies the configuration contained within to a destination Airbyte deployment.
 
 Basic usage could be something like:
@@ -56,7 +59,7 @@ There are a number of additional optional parameters that modify how a sync oper
 - `--dump` dumps the full configuration of the destination deployment to a configuration
 **before** applying the sync operation.
 
-### Sync Deployment to yaml
+**Sync deployment to yaml**
 An existing Airbyte deployment can be written to a .yaml by following the `--target` argument with a filename having the .yaml or .yml extension. For example:
 
 `python tentacle.py sync http://123.456.789.0:8081 --target my_deployment.yml --all`
@@ -80,3 +83,10 @@ Note in this case, no `--secrets` file is specified, since it has no meaning in 
 ## Acknowledgements
 
 ## License
+Copyright <YEAR> <COPYRIGHT HOLDER>
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
