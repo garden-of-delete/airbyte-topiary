@@ -1,8 +1,8 @@
 # Airbyte Tentacle
-This software exists for a reason.
+Airbyte tentacle is a work-in-progress configuration and deployment management tool for [Airbyte](https://github.com/airbytehq/airbyte).
 
 ## Releases
-There will eventually be a release.
+No releases yet.
 
 ## Setup
 1. Clone this repo to your working environment
@@ -15,6 +15,7 @@ Activate the environment with `. .venv/bin/activate`
 4. Run Tentacle. `python tentacle.py` will display help and usage.
 
 ## Configuration as YAML
+Airbyte tentacle allows configuration for an airbyte deployment to be moved to and from yaml files through interaction with the Airbyte API.
 
 ## Workflows
 Airbyte tentacle supports a number of workflows designed to make managing Airbyte deployments at scale easier. Tentacle uses the .yml or .yaml
@@ -28,7 +29,7 @@ In all cases, a configuration origin, which follows the `sync` command, and a `-
 
 Tentacle will use the .yaml or .yml file extensions following the `source` and `--target` arguments to choose the right sync workflow.
 
-During setup, Airbyte creates a default workspace called 'default'. Tentacle allows the user to specify an alternative existing workspace by name using the `--workspace` argument, followed by the name of the workspace.
+During setup, Airbyte creates a default workspace called 'default'. Tentacle allows the user to specify an alternative existing workspace by name using the optional `--workspace` argument, followed by the name of the workspace.
 
 These optional arguments can be used in combination to define what to apply the sync operation to:
 - `--sources`
@@ -58,7 +59,9 @@ There are a number of additional optional parameters that modify how a sync oper
 ### Sync Deployment to yaml
 An existing Airbyte deployment can be written to a .yaml by following the `--target` argument with a filename having the .yaml or .yml extension. For example:
 
-`python tentacle.py sync config.yml --target http://123.456.789.0:8081 --all`
+`python tentacle.py sync http://123.456.789.0:8081 --target my_deployment.yml --all`
+
+Will write the configuration of all sources, destinations, and connections to `my_deployment.yml`.
 
 Note in this case, no `--secrets` file is specified, since it has no meaning in this workflow. Secrets can't be extracted from the Airbyte API.
 

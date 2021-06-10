@@ -4,21 +4,22 @@ This is a simple, open-source tool designed to help manage Airbyte deployments a
 
 TODO LIST:
 - (done) Implement "check" routes for source and destination validation
+- (done) Drop description and code supporting the deployment to deployment use case
 - Implement the connection routes, dto class, and all associated functions
 - Finalize the yaml to deployment workflow
     - (done) Add print statements to create_source and create_destination
-    - Add ability for user to override workspace slug
+    - (done) Add ability for user to override workspace slug
     - Address modification of existing sources and destinations
-    - Clarify all arg processor functions related to this workflow
+    - (done) Clarify all arg processor functions related to this workflow
     - implement validate changes option
     - implement the --dump option
     - (Stretch): modification of connections
-- (partially done) Restructure main method
+- (partially done) Restructure main method as a proper controller. All feedback to user should come from controller
 - Update deployment workflow
 - Deployment to yaml workflow
 - Deployment to deployment workflow
-- Wipe target workflow
-- Readme
+- (done) Wipe target workflow
+- (in progress) Readme
 - License
 - Tests!
 - Post 0.1.0
@@ -50,7 +51,7 @@ def main(args):
                     args.target.strip().split('.')[-1] == 'yml' or \
                     args.target.strip().split('.')[-1] == 'yaml':
                 print("Fatal error: --destination must be followed by a valid "
-                      "Airbyte deployment url when running in any sync mode")
+                      "Airbyte deployment url when the origin is a .yaml file")
                 exit(2)
             client = AirbyteClient(args.target)
         else:  # in sync mode and source is not a yaml file
@@ -59,13 +60,13 @@ def main(args):
         client = AirbyteClient(args.origin)
 
     if args.workspace_slug:
-        workspace = client.get_workspace_by_slug(args.workspace_slug)
+        workspace = client.get_workspace_by_slug(args.workspace_slug).payload
     else:
-        workspace = client.get_workspace_by_slug()  # TODO: support for non default workspaces and multiple workspaces
+        workspace = client.get_workspace_by_slug().payload
 
     # get source and destination definitions
-    available_sources = client.get_source_definitions()
-    available_destinations = client.get_destination_definitions()
+    available_sources = client.get_source_definitions().payload
+    available_destinations = client.get_destination_definitions().payload
     # initialize data transfer object factory
     dto_factory = AirbyteDtoFactory(available_sources, available_destinations)
     print("main: retrieved source and destination definitions from: " + client.airbyte_url)
@@ -77,9 +78,9 @@ def main(args):
     print("main: read configuration from source yaml")
 
     # get configured connectors and connections from Airbyte API
-    configured_sources = client.get_configured_sources(workspace)
-    configured_destinations = client.get_configured_destinations(workspace)
-    configured_connections = client.get_configured_connections(workspace)
+    configured_sources = client.get_configured_sources(workspace).payload
+    configured_destinations = client.get_configured_destinations(workspace).payload
+    configured_connections = client.get_configured_connections(workspace).payload
     print("main: retrieved configuration from: " + client.airbyte_url)
 
     '''
@@ -133,8 +134,6 @@ def main(args):
     # sync deployment to yaml
 
     # airbyte_model.write_to_yaml()
-
-    # deploment to deployment
 
     # update workflow
 

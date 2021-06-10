@@ -1,42 +1,53 @@
 import requests
 
+RESPONSE_CODES = {
+    200: "Operation successful",
+    204: "The resource was deleted successfully",
+    404: "Resource not found",
+    422: "Invalid input",
+}
+
+class AirbyteResponse:
+    def __init__(self, response):
+        self.message = RESPONSE_CODES[response.status_code]
+        self.payload = response.json()
+        self.ok = response.ok
+
 class AirbyteClient:
     """Airbyte interface"""
     def __init__(self, url):
-        self.airbyte_url = url.strip('/') + '/'  # TODO: a little awkward
-        #self.workspace_slug = "default"
-        #self.workspace_uuid = self.get_workspace_by_slug(self.workspace_slug)['workspaceId']  # TODO: move workspace info to AirbyteClientModel
+        self.airbyte_url = url.strip('/') + '/'  # TODO: a little awk
 
     def get_workspace_by_slug(self, slug='default'):
         """Route: POST /v1/workspaces/get_by_slug"""
         route = self.airbyte_url + 'api/v1/workspaces/get_by_slug'
         r = requests.post(route, json={"slug": slug})
-        return r.json()
+        return AirbyteResponse(r)
 
     def get_workspace_by_id(self, workspace_uuid):
-        """(LOW PRIO) Route: POST /v1/workspaces/get"""
+        """Route: POST /v1/workspaces/get"""
         uuid = None
         route = self.airbyte_url + 'api/v1/workspaces/get'
         r = requests.post(route, json={"workspace_id": uuid})
-        return r.json()
+        return AirbyteResponse(r)
 
     def get_source_definitions(self):
         """Route: /v1/source_definitions/list"""
         route = self.airbyte_url + 'api/v1/source_definitions/list'
         r = requests.post(route)
-        return r.json()
+        return AirbyteResponse(r)
 
     def get_source_definition_spec(self, source_id):
         """Route: /v1/source_definition_specifications/get"""
         route = self.airbyte_url + 'api/v1/source_definition_specifications/get'
         r = requests.post(route, json={'sourceDefinitionId': source_id})
-        return r.json()
+        return AirbyteResponse(r)
 
     def get_destination_definitions(self):
         """Route: /v1/destination_definitions/list"""
         route = self.airbyte_url + 'api/v1/destination_definitions/list'
         r = requests.post(route)
-        return r.json()
+        return AirbyteResponse(r)
 
     def check_source_connection(self, source_dto):
         """Route: POST /v1/sources/check_connection"""
@@ -63,7 +74,6 @@ class AirbyteClient:
             print("AirbyteClient.create_source : Invalid input")
         else:
             print("AirbyteClient.create_source : Unrecognized response code " + str(r.status_code))
-
 
     def delete_source(self, source_dto):
         """Route: POST /v1/sources/delete"""
