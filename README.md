@@ -68,8 +68,6 @@ Will write the configuration of all sources, destinations, and connections to `m
 
 Note in this case, no `--secrets` file is specified, since it has no meaning in this workflow. Secrets can't be extracted from the Airbyte API.
 
-### Sync Deployment to deployment
-
 ### Wipe a deployment
 
 ### Validate a deployment

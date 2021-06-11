@@ -21,9 +21,11 @@ class AirbyteConfigModel:
         pass
 
     def wipe_sources(self, client):
+        """Removes all sources in self.sources from deployment and the object"""
+        # TODO: delete_sources would ideally return an AirbyteResponse and not a bool
         removed = []
         for source in self.sources.values():
-            if client.delete_source(source) == 204:
+            if client.delete_source(source):
                 removed.append(source.source_id)
             else:
                 print("AirbyteConfigModel.wipe_sources : Unable to delete source: " + repr(source))
@@ -33,7 +35,7 @@ class AirbyteConfigModel:
     def wipe_destinations(self, client):
         removed = []
         for destination in self.destinations.values():
-            if client.delete_destination(destination) == 204:
+            if client.delete_destination(destination):
                 removed.append(destination.destination_id)
             else:
                 print("AirbyteConfigModel.wipe_destinations : Unable to delete destination: " + repr(destination))
@@ -41,11 +43,11 @@ class AirbyteConfigModel:
             self.destinations.pop(destination_id)
 
     def validate(self, client):
-        '''this function validates the model and all included connectors'''
+        """this function validates the model and all included connectors"""
         for source in self.sources.values():
-            response = client.check_source_connection(source)
+            response = client.check_source_connection(source).payload
             print("Source is valid: " + response['jobInfo']['id'] + ' ' + repr(response['jobInfo']['succeeded']))
         for destination in self.destinations.values():
-            response = client.check_destination_connection(destination)
+            response = client.check_destination_connection(destination).payload
             print("destination is valid: " + response['jobInfo']['id'] + ' ' + repr(response['jobInfo']['succeeded']))
             pass

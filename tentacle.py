@@ -6,6 +6,7 @@ TODO LIST:
 - (done) Implement "check" routes for source and destination validation
 - (done) Drop description and code supporting the deployment to deployment use case
 - Implement the connection routes, dto class, and all associated functions
+- (partially done) Restructure main method as a proper controller. All feedback to user should come from controller
 - Finalize the yaml to deployment workflow
     - (done) Add print statements to create_source and create_destination
     - (done) Add ability for user to override workspace slug
@@ -13,8 +14,7 @@ TODO LIST:
     - (done) Clarify all arg processor functions related to this workflow
     - implement validate changes option
     - implement the --dump option
-    - (Stretch): modification of connections
-- (partially done) Restructure main method as a proper controller. All feedback to user should come from controller
+    - (stretch): modification of connections
 - Update deployment workflow
 - Deployment to yaml workflow
 - Deployment to deployment workflow
@@ -78,9 +78,9 @@ def main(args):
     print("main: read configuration from source yaml")
 
     # get configured connectors and connections from Airbyte API
-    configured_sources = client.get_configured_sources(workspace).payload
-    configured_destinations = client.get_configured_destinations(workspace).payload
-    configured_connections = client.get_configured_connections(workspace).payload
+    configured_sources = client.get_configured_sources(workspace).payload['sources']
+    configured_destinations = client.get_configured_destinations(workspace).payload['destinations']
+    configured_connections = client.get_configured_connections(workspace).payload['connections']
     print("main: retrieved configuration from: " + client.airbyte_url)
 
     '''
@@ -109,22 +109,35 @@ def main(args):
         airbyte_model.full_wipe(client)
 
     print("Applying changes to deployment: " + client.airbyte_url)
+
+    '''
+            if r.status_code == 200:
+            destination_dto.destination_id = r.json()['destinationId']
+            print("Created destination: " + r.json()['destinationId'])
+            return AirbyteResponse(r)
+        elif r.status_code == 422:
+            print("AirbyteClient.create_destination : Invalid input")
+        else:
+            print("AirbyteClient.create_destination : Unrecognized response code " + str(r.status_code))
+    '''
+
     if args.sources or args.all:
         for new_source in new_dtos['sources']:
             if new_source.source_id is None:
                 response = client.create_source(new_source, workspace)
-                source_dto = dto_factory.build_source_dto(response)
-                airbyte_model.sources[new_source.source_id] = new_source
+                source_dto = dto_factory.build_source_dto(response.payload)
+                airbyte_model.sources[source_dto.source_id] = source_dto
             else:
                 pass  # TODO: modify existing source
     if args.destinations or args.all:
         for new_destination in new_dtos['destinations']:
             if new_destination.destination_id is None:
                 response = client.create_destination(new_destination, workspace)
-                destination_dto = dto_factory.build_destination_dto(response)
+                destination_dto = dto_factory.build_destination_dto(response.payload)
                 airbyte_model.destinations[destination_dto.destination_id] = destination_dto
             else:
                 pass  # TODO: modify existing destination
+    # TODO: if args.connections in new_dtos['connections']:
 
     # validate
     if args.validate or args.mode == 'validate':

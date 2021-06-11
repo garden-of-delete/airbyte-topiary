@@ -9,9 +9,14 @@ RESPONSE_CODES = {
 
 class AirbyteResponse:
     def __init__(self, response):
-        self.message = RESPONSE_CODES[response.status_code]
+        if response.status_code in RESPONSE_CODES:
+            self.message = RESPONSE_CODES[response.status_code]
+        else:
+            self.message = "Unrecognized response code"
         self.payload = response.json()
         self.ok = response.ok
+
+
 
 class AirbyteClient:
     """Airbyte interface"""
@@ -56,7 +61,7 @@ class AirbyteClient:
         r = requests.post(route, json=payload)
         if r.status_code == '404':
             print(source_dto.source_id + ': Unable to validate, source not found')
-        return r.json()
+        return AirbyteResponse(r)
 
     def create_source(self, source_dto, workspace):
         """ Route: POST /v1/sources/create"""
@@ -66,14 +71,8 @@ class AirbyteClient:
                    'connectionConfiguration': source_dto.connection_configuration,
                    'name': source_dto.name}
         r = requests.post(route, json=payload)
-        if r.status_code == 200:
-            source_dto.source_id = r.json()['sourceId']
-            print("Created source: " + r.json()['sourceId'])
-            return r.json()
-        elif r.status_code == 422:
-            print("AirbyteClient.create_source : Invalid input")
-        else:
-            print("AirbyteClient.create_source : Unrecognized response code " + str(r.status_code))
+        return AirbyteResponse(r)
+
 
     def delete_source(self, source_dto):
         """Route: POST /v1/sources/delete"""
@@ -81,14 +80,13 @@ class AirbyteClient:
         payload = {'sourceId': source_dto.source_id}
         print("Deleting source: " + source_dto.source_id)
         r = requests.post(route, json=payload)
-        return r.status_code
+        return r.ok  # TODO: should return an AirbyteResponse, but Airbyte API returns a different type for this route
 
     def get_configured_sources(self, workspace):
         """Route: POST /v1/sources/list"""
         route = self.airbyte_url + 'api/v1/sources/list'
         r = requests.post(route, json={'workspaceId': workspace['workspaceId']})
-        test = r.json()
-        return r.json()['sources']
+        return AirbyteResponse(r)
 
     def update_source(self):
         """Route: POST /v1/sources/update"""
@@ -101,7 +99,7 @@ class AirbyteClient:
         r = requests.post(route, json=payload)
         if r.status_code == '404':
             print(destination_dto.destination_id + ': Unable to validate, destination not found')
-        return r.json()
+        return AirbyteResponse(r)
 
     def create_destination(self, destination_dto, workspace):
         """ Route: POST /v1/destinations/create"""
@@ -111,14 +109,8 @@ class AirbyteClient:
                    'connectionConfiguration': destination_dto.connection_configuration,
                    'name': destination_dto.name}
         r = requests.post(route, json=payload)
-        if r.status_code == 200:
-            destination_dto.destination_id = r.json()['destinationId']
-            print("Created destination: " + r.json()['destinationId'])
-            return r.json()
-        elif r.status_code == 422:
-            print("AirbyteClient.create_destination : Invalid input")
-        else:
-            print("AirbyteClient.create_destination : Unrecognized response code " + str(r.status_code))
+
+        return AirbyteResponse(r)
 
     def delete_destination(self, destination_dto):
         """Route: POST /v1/destinations/delete"""
@@ -126,7 +118,7 @@ class AirbyteClient:
         payload = {'destinationId': destination_dto.destination_id}
         print("Deleting destination: " + destination_dto.destination_id)
         r = requests.post(route, json=payload)
-        return r.status_code
+        return r.ok  # TODO: should return an AirbyteResponse, but Airbyte API returns a different type for this route
 
     def list_destinations(self):
         """Route: POST /v1/destinations/list"""
@@ -136,7 +128,7 @@ class AirbyteClient:
         """Route: POST /v1/destinations/list"""
         route = self.airbyte_url + 'api/v1/destinations/list'
         r = requests.post(route, json={'workspaceId': workspace['workspaceId']})
-        return r.json()['destinations']
+        return AirbyteResponse(r)
 
     def update_destination(self):
         """Route: POST /v1/destinations/update"""
@@ -170,5 +162,4 @@ class AirbyteClient:
         """Route: POST /v1/connections/list"""
         route = self.airbyte_url + 'api/v1/connections/list'
         r = requests.post(route, json={'workspaceId': workspace['workspaceId']})
-        test = r.json()
-        return r.json()['connections']
+        return AirbyteResponse(r)
