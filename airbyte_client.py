@@ -7,6 +7,7 @@ RESPONSE_CODES = {
     422: "Invalid input",
 }
 
+
 class AirbyteResponse:
     def __init__(self, response):
         if response.status_code in RESPONSE_CODES:
@@ -15,6 +16,7 @@ class AirbyteResponse:
             self.message = "Unrecognized response code"
         self.payload = response.json()
         self.ok = response.ok
+        # TODO: include the full response object
 
 
 

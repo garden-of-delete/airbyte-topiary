@@ -89,46 +89,35 @@ def read_yaml_config(args):  # TODO: Move into controller
 
 def main(args):
     """ Main entry point of the app. Chooses the correct controller workflow"""
+    # setup
     client = instantiate_client(args)
     controller = Controller()
-    controller.get_definitions(client)
-    dto_factory = AirbyteDtoFactory(client.get_source_definitions().payload,
-                                    client.get_destination_definitions().payload)  # TODO: should the controller own dto_factory?
+    definitions = controller.get_definitions(client)
+    controller.instantiate_dto_factory(definitions['source_definitions'], definitions['destination_definitions'])
     yaml_config, secrets = read_yaml_config(args)
     workspace = controller.get_workspace(args, client)
     print("main: read configuration from source yaml")
-    airbyte_model = AirbyteConfigModel()
-    configured_objects = controller.get_airbyte_configuration(client, workspace)
-    new_dtos = dto_factory.build_dtos_from_yaml_config(yaml_config, secrets)  # TODO: move into controller?
+    airbyte_model = controller.get_airbyte_configuration(client, workspace)
 
-    for source in configured_objects['sources']:  # TODO: this block probably belings in a controller function
-        source_dto = dto_factory.build_source_dto(source)
-        airbyte_model.sources[source_dto.source_id] = source_dto
-    for destination in configured_objects['destinations']:
-        destination_dto = dto_factory.build_destination_dto(destination)
-        airbyte_model.destinations[destination_dto.destination_id] = destination_dto
-    for connection in configured_objects['connections']:
-        connection_dto = dto_factory.build_connection_dto(connection)
-        airbyte_model.connections[connection_dto.connection_id] = connection_dto
-
+    # execute the selected workflow
     if args.mode == 'sync':
+        new_dtos = controller.build_dtos_from_yaml_config(yaml_config, secrets)
         if args.wipe:
             print("Wiping deployment: " + client.airbyte_url)
             airbyte_model.full_wipe(client)
         print("Applying changes to deployment: " + client.airbyte_url)
         if args.sources or args.all:
-            controller.sync_sources(airbyte_model, client, workspace, dto_factory, new_dtos)  # TODO: simplify this function arg list by moving dto_factory into controller
+            controller.sync_sources(airbyte_model, client, workspace, new_dtos)
         if args.destinations or args.all:
-            controller.sync_destinations(airbyte_model, client, workspace, dto_factory, new_dtos)
+            controller.sync_destinations(airbyte_model, client, workspace, new_dtos)
         if args.connections or args.all:
-            pass
+            pass  # TODO: implement controller.sync_connection
         if args.validate:
             print("Validating connectors...")
             airbyte_model.validate(client)
-        pass
     elif args.mode == 'wipe':
         print("Wiping deployment: " + client.airbyte_url)
-        airbyte_model.full_wipe(client)
+        controller.wipe(airbyte_model, client)
     elif args.mode == 'update':
         controller.update()  # TODO: implement the update workflow
     elif args.mode == 'validate':
