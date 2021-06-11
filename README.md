@@ -72,8 +72,6 @@ Note in this case, no `--secrets` file is specified, since it has no meaning in 
 
 ### Validate a deployment
 
-### Update a deployment
-
 ## Design
 
 ## Contributing

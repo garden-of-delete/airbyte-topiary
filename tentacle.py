@@ -6,16 +6,14 @@ TODO LIST:
 - (done) Implement "check" routes for source and destination validation
 - (done) Drop description and code supporting the deployment to deployment use case
 - Implement the connection routes, dto class, and all associated functions
-- (partially done) Restructure main method as a proper controller. All feedback to user should come from controller
+- (done) Restructure main method as a proper controller. All feedback to user should come from controller
 - Finalize the yaml to deployment workflow
     - (done) Add print statements to create_source and create_destination
     - (done) Add ability for user to override workspace slug
     - Address modification of existing sources and destinations
     - (done) Clarify all arg processor functions related to this workflow
-    - implement validate changes option
     - implement the --dump option
     - (stretch): modification of connections
-- Update deployment workflow
 - Deployment to yaml workflow
 - Deployment to deployment workflow
 - (done) Wipe target workflow
@@ -118,8 +116,6 @@ def main(args):
     elif args.mode == 'wipe':
         print("Wiping deployment: " + client.airbyte_url)
         controller.wipe(airbyte_model, client)
-    elif args.mode == 'update':
-        controller.update()  # TODO: implement the update workflow
     elif args.mode == 'validate':
         print("Validating connectors...")
         airbyte_model.validate(client)

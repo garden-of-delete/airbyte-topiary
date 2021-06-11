@@ -89,8 +89,5 @@ class Controller:
     def wipe(self, airbyte_model, client):
         airbyte_model.full_wipe(client)
 
-    def update(self):
-        pass
-
     def validate(self):
         pass
