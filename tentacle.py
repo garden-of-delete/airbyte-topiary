@@ -6,16 +6,14 @@ TODO LIST:
 - (done) Implement "check" routes for source and destination validation
 - (done) Drop description and code supporting the deployment to deployment use case
 - Implement the connection routes, dto class, and all associated functions
-- (partially done) Restructure main method as a proper controller. All feedback to user should come from controller
+- (done) Restructure main method as a proper controller. All feedback to user should come from controller
 - Finalize the yaml to deployment workflow
     - (done) Add print statements to create_source and create_destination
     - (done) Add ability for user to override workspace slug
     - Address modification of existing sources and destinations
     - (done) Clarify all arg processor functions related to this workflow
-    - implement validate changes option
     - implement the --dump option
     - (stretch): modification of connections
-- Update deployment workflow
 - Deployment to yaml workflow
 - Deployment to deployment workflow
 - (done) Wipe target workflow
@@ -38,119 +36,92 @@ import yaml
 from airbyte_client import AirbyteClient
 from airbyte_config_model import AirbyteConfigModel
 from airbyte_dto_factory import AirbyteDtoFactory
+from controller import Controller
+
 
 VALID_MODES = ['wipe', 'update', 'validate', 'sync']
 
-def main(args):
-    """ Main entry point of the app """
-    airbyte_model = AirbyteConfigModel()
-    if args.mode == 'sync':
-        # if in sync mode and source is a yaml file
-        if args.origin.strip().split('.')[-1] == 'yml' or args.origin.strip().split('.')[-1] == 'yaml':
-            if args.target is None or \
-                    args.target.strip().split('.')[-1] == 'yml' or \
-                    args.target.strip().split('.')[-1] == 'yaml':
-                print("Fatal error: --destination must be followed by a valid "
-                      "Airbyte deployment url when the origin is a .yaml file")
-                exit(2)
-            client = AirbyteClient(args.target)
-        else:  # in sync mode and source is not a yaml file
-            client = AirbyteClient(args.origin)
-    else:  # not in sync mode
-        client = AirbyteClient(args.origin)
-
-    if args.workspace_slug:
-        workspace = client.get_workspace_by_slug(args.workspace_slug).payload
+def is_origin_yaml(args):
+    if args.origin.strip().split('.')[-1] == 'yml' or args.origin.strip().split('.')[-1] == 'yaml':
+        return True
     else:
-        workspace = client.get_workspace_by_slug().payload
+        return False
 
-    # get source and destination definitions
-    available_sources = client.get_source_definitions().payload
-    available_destinations = client.get_destination_definitions().payload
-    # initialize data transfer object factory
-    dto_factory = AirbyteDtoFactory(available_sources, available_destinations)
-    print("main: retrieved source and destination definitions from: " + client.airbyte_url)
 
-    # get config from config.yml
-    yaml_config = yaml.safe_load(open("config.yml", 'r'))
-    secrets = yaml.safe_load(open("secrets.yml", 'r'))
-    new_dtos = dto_factory.build_dtos_from_yaml_config(yaml_config, secrets)
+def is_target_yaml(args):
+    if args.origin.strip().split('.')[-1] == 'yml' or args.origin.strip().split('.')[-1] == 'yaml':
+        return False
+    else:
+        return True
+
+
+def instantiate_client(args):  # TODO: Move into controller
+    # if in sync mode and source is a yaml file
+    if is_origin_yaml(args):
+        if is_target_yaml(args):
+            print("Fatal error: --target must be followed by a valid "
+                  "Airbyte deployment url when the origin is a .yaml file")
+            exit(2)
+        client = AirbyteClient(args.target)
+    elif is_target_yaml(args):
+        if is_origin_yaml(args):
+            print("Fatal error: --target must be followed by a valid "
+                  "Airbyte deployment url when the origin is a .yaml file")
+            exit(2)
+        client = AirbyteClient(args.origin)
+    else:
+        print("Fatal error: the origin or --target must be a valid .yaml configuration file")
+        exit(2)
+    return client
+
+
+def read_yaml_config(args):  # TODO: Move into controller
+    """get config from config.yml"""
+    if is_origin_yaml(args):
+        yaml_config = yaml.safe_load(open(args.origin, 'r'))
+    else:
+        yaml_config = yaml.safe_load(open(args.target, 'r'))
+    secrets = yaml.safe_load(open(args.secrets, 'r'))
+    return yaml_config, secrets
+
+
+def main(args):
+    """ Main entry point of the app. Chooses the correct controller workflow"""
+    # setup
+    client = instantiate_client(args)
+    controller = Controller()
+    definitions = controller.get_definitions(client)
+    controller.instantiate_dto_factory(definitions['source_definitions'], definitions['destination_definitions'])
+    yaml_config, secrets = read_yaml_config(args)
+    workspace = controller.get_workspace(args, client)
     print("main: read configuration from source yaml")
+    airbyte_model = controller.get_airbyte_configuration(client, workspace)
 
-    # get configured connectors and connections from Airbyte API
-    configured_sources = client.get_configured_sources(workspace).payload['sources']
-    configured_destinations = client.get_configured_destinations(workspace).payload['destinations']
-    configured_connections = client.get_configured_connections(workspace).payload['connections']
-    print("main: retrieved configuration from: " + client.airbyte_url)
-
-    '''
-    # DEBUG
-    dump = {"sources": configured_sources, "destinations": configured_destinations, "connections": configured_connections}
-    outfile = open("config_dump.yml", 'w')
-    yaml.safe_dump({'sources': configured_sources}, outfile)
-    yaml.safe_dump({'destinations': configured_destinations}, outfile)
-    yaml.safe_dump({'connections': configured_connections}, outfile)
-    '''
-
-    # send configured_sources to the factory to build sourceDtos
-    for source in configured_sources:
-        source_dto = dto_factory.build_source_dto(source)
-        airbyte_model.sources[source_dto.source_id] = source_dto
-    for destination in configured_destinations:
-        destination_dto = dto_factory.build_destination_dto(destination)
-        airbyte_model.destinations[destination_dto.destination_id] = destination_dto
-    for connection in configured_connections:
-        connection_dto = dto_factory.build_connection_dto(connection)
-        airbyte_model.connections[connection_dto.connection_id] = connection_dto
-
-    # sync yaml to deployment
-    if args.wipe or args.mode == 'wipe':
+    # execute the selected workflow
+    if args.mode == 'sync':
+        new_dtos = controller.build_dtos_from_yaml_config(yaml_config, secrets)
+        if args.wipe:
+            print("Wiping deployment: " + client.airbyte_url)
+            airbyte_model.full_wipe(client)
+        print("Applying changes to deployment: " + client.airbyte_url)
+        if args.sources or args.all:
+            controller.sync_sources(airbyte_model, client, workspace, new_dtos)
+        if args.destinations or args.all:
+            controller.sync_destinations(airbyte_model, client, workspace, new_dtos)
+        if args.connections or args.all:
+            pass  # TODO: implement controller.sync_connection
+        if args.validate:
+            print("Validating connectors...")
+            airbyte_model.validate(client)
+    elif args.mode == 'wipe':
         print("Wiping deployment: " + client.airbyte_url)
-        airbyte_model.full_wipe(client)
-
-    print("Applying changes to deployment: " + client.airbyte_url)
-
-    '''
-            if r.status_code == 200:
-            destination_dto.destination_id = r.json()['destinationId']
-            print("Created destination: " + r.json()['destinationId'])
-            return AirbyteResponse(r)
-        elif r.status_code == 422:
-            print("AirbyteClient.create_destination : Invalid input")
-        else:
-            print("AirbyteClient.create_destination : Unrecognized response code " + str(r.status_code))
-    '''
-
-    if args.sources or args.all:
-        for new_source in new_dtos['sources']:
-            if new_source.source_id is None:
-                response = client.create_source(new_source, workspace)
-                source_dto = dto_factory.build_source_dto(response.payload)
-                airbyte_model.sources[source_dto.source_id] = source_dto
-            else:
-                pass  # TODO: modify existing source
-    if args.destinations or args.all:
-        for new_destination in new_dtos['destinations']:
-            if new_destination.destination_id is None:
-                response = client.create_destination(new_destination, workspace)
-                destination_dto = dto_factory.build_destination_dto(response.payload)
-                airbyte_model.destinations[destination_dto.destination_id] = destination_dto
-            else:
-                pass  # TODO: modify existing destination
-    # TODO: if args.connections in new_dtos['connections']:
-
-    # validate
-    if args.validate or args.mode == 'validate':
+        controller.wipe(airbyte_model, client)
+    elif args.mode == 'validate':
         print("Validating connectors...")
         airbyte_model.validate(client)
+    else:
+        print("main: unrecognized mode " + args.mode)
 
-    # sync deployment to yaml
-
-    # airbyte_model.write_to_yaml()
-
-    # update workflow
-
-    pass
 
 if __name__ == "__main__":
     """ This is executed when run from the command line """

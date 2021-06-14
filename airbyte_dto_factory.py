@@ -4,30 +4,6 @@ class AirbyteDtoFactory:
         self.source_definitions = source_definitions
         self.destination_definitions = destination_definitions
 
-    def build_dtos_from_yaml_config(self, yaml_config, secrets):
-        new_dtos = {}
-        if 'global' in yaml_config.keys():  # TODO: not needed?
-            for item in yaml_config['global']:
-                pass
-        if 'workspaces' in yaml_config.keys():
-            for item in yaml_config['workspaces']:
-                pass
-        if 'sources' in yaml_config.keys():
-            new_sources = []
-            for item in yaml_config['sources']:
-                new_sources.append(self.build_source_dto(item))
-            new_dtos['sources'] = new_sources
-        if 'destinations' in yaml_config.keys():
-            new_destinations = []
-            for item in yaml_config['destinations']:
-                new_destinations.append(self.build_destination_dto(item))
-            new_dtos['destinations'] = new_destinations
-        if 'connections' in yaml_config.keys():
-            for item in yaml_config['connections']:
-                pass
-        self.populate_secrets(secrets, new_dtos)
-        return new_dtos
-
     def populate_secrets(self, secrets, new_dtos):
         # TODO: Find a better way to deal with unpredictably named secrets
         for source in new_dtos['sources']:
