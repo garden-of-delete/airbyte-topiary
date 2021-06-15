@@ -69,7 +69,7 @@ Will write the configuration of all sources, destinations, and connections to `m
 Note in this case, no `--secrets` file is specified, since it has no meaning in this workflow. Secrets can't be extracted from the Airbyte API.
 
 ## Wipe a deployment
-The `wipe` mode deletes all sources, destinations, connections or any combination in an existing Airbyte deployment.
+The `wipe` mode deletes sources, destinations, connections or any combination in an existing Airbyte deployment.
 
 `python tentacle.py wipe http://123.456.789.0:8081 --all`
 
@@ -80,6 +80,15 @@ As with `sync`ing a .yaml file to a deployment, these optional arguments can be 
 - `--all` (same as `--sources --destinations --connections`)
 
 ## Validate a deployment
+The `validate` mode validates sources, destinations, connections or any combination in an existing Airbyte deployment.
+
+`python tentacle.py validate http://123.456.789.0:8081 --all`
+
+As with `wipe` mode, these optional arguments can be used in combination to define what to apply the `validate` operation to:
+- `--sources`
+- `--destinations`
+- `--connections`
+- `--all` (same as `--sources --destinations --connections`)
 
 # Design
 

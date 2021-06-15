@@ -74,6 +74,7 @@ class Controller:
         return airbyte_model
 
     def get_workspace(self, args, client):
+        """Retrieves workspace specified by the --workspace argument, or the default workspace otherwise"""
         if args.workspace_slug:
             workspace = client.get_workspace_by_slug(args.workspace_slug).payload
         else:
@@ -81,6 +82,7 @@ class Controller:
         return workspace
 
     def build_dtos_from_yaml_config(self, yaml_config, secrets):
+        """Creates a dict of new DTOs by parsing the user specified .yml config file"""
         new_dtos = {}
         if 'global' in yaml_config.keys():
             for item in yaml_config['global']:
@@ -125,34 +127,42 @@ class Controller:
                 pass  # TODO: modify existing destination
 
     def wipe_sources(self, airbyte_model, client):
+        """Wrapper for AirbyteConfigModel.wipe_sources"""
         print("Wiping sources on " + client.airbyte_url)
         airbyte_model.wipe_sources(client)
 
     def wipe_destinations(self, airbyte_model, client):
+        """Wrapper for AirbyteConfigModel.wipe_destinations"""
         print("Wiping destinations on " + client.airbyte_url)
         airbyte_model.wipe_destinations(client)
 
     def wipe_connections(self, airbyte_model, client):
+        """Wrapper for AirbyteConfigModel.wipe_connections"""
         pass  # TODO: implement controller.wipe_connections
 
     def wipe_all(self, airbyte_model, client):
+        """Wipes all sources, destinations, and connections in the specified airbyte deployment"""
         print("Wiping deployment: " + client.airbyte_url)
         self.wipe_sources(airbyte_model, client)
         self.wipe_destinations(airbyte_model, client)
         # self.wipe_connections(client)
 
     def validate_sources(self, airbyte_model, client):
+        """Wrapper for AirbyteConfigModel.validate_sources"""
         print("Validating sources...")
         airbyte_model.validate_sources(client)
 
     def validate_destinations(self, airbyte_model, client):
+        """Wrapper for AirbyteConfigModel.validate_destinations"""
         print("Validating destinations...")
         airbyte_model.validate_destinations(client)
 
     def validate_connections(self, airbyte_mopdel, client):
+        """Wrapper for AirbyteConfigModel.validate_connections"""
         pass  # TODO: implement Controller.validate_connections
 
     def validate_all(self, airbyte_model, client):
+        """Validates all sources, destinations, and connections in the specified AirbyteConfigModel"""
         self.validate_sources(airbyte_model, client)
         self.validate_destinations(airbyte_model, client)
         #self.validate_connections(airbyte_model, client)
