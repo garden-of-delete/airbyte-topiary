@@ -14,8 +14,9 @@ TODO LIST:
     - (done) Clarify all arg processor functions related to this workflow
     - implement the --dump option
     - (stretch): modification of connections
-- Deployment to yaml workflow
+- (done) Deployment to yaml workflow
 - (done) Wipe target workflow
+- (done) Validate workflow
 - (in progress) README.md
 - (done) License
 - Decorators
