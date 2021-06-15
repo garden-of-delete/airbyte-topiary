@@ -19,7 +19,6 @@ class AirbyteResponse:
         # TODO: include the full response object
 
 
-
 class AirbyteClient:
     """Airbyte interface"""
     def __init__(self, url):

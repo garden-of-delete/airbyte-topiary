@@ -33,6 +33,8 @@ class AirbyteDtoFactory:
             r.source_id = source['sourceId']
         if 'workspaceId' in source:
             r.workspace_id = source['sourceId']
+        if 'tag' in source:
+            r.tag = source['tag']
         # TODO: check for validity?
         return r
 
@@ -51,6 +53,8 @@ class AirbyteDtoFactory:
             r.destination_id = destination['destinationId']
         if 'workspaceId' in destination:
             r.workspace_id = destination['destinationId']
+        if 'tag' in destination:
+            r.tag = destination['tag']
         # TODO: check for validity?
         return r
 
@@ -67,6 +71,7 @@ class AirbyteDtoFactory:
         # TODO: check for validity?
         return r
 
+
 class SourceDto:
     """Data transfer object class for Source-type Airbyte abstractions"""
     def __init__(self):
@@ -76,8 +81,10 @@ class SourceDto:
         self.connection_configuration = {}
         self.name = None
         self.source_name = None
+        self.tag = None
 
     def to_payload(self):
+        """sends this dto object to a dict formatted as a payload"""
         r = {}
         r['sourceDefinitionId'] = self.source_definition_id
         r['sourceId'] = self.source_id
@@ -86,6 +93,7 @@ class SourceDto:
         r['name'] = self.name
         r['sourceName'] = self.source_name
         return r
+
 
 class DestinationDto:
     """Data transfer object class for Destination-type Airbyte abstractions"""
@@ -96,6 +104,19 @@ class DestinationDto:
         self.connection_configuration = {}
         self.name = None
         self.destination_name = None
+        self.tag = None
+    
+    def to_payload(self):
+        """sends this dto object to a dict formatted as a payload"""
+        r = {}
+        r['destinationDefinitionId'] = self.destination_definition_id
+        r['destinationId'] = self.destination_id
+        r['workspaceId'] = self.workspace_id
+        r['connectionConfiguration'] = self.connection_configuration
+        r['name'] = self.name
+        r['destinationName'] = self.destination_name
+        return r
+    
 
 class ConnectionDto:
     """Data transfer object class for Connection-type Airbyte abstractions"""
@@ -108,6 +129,9 @@ class ConnectionDto:
         self.sync_catalog = {} # sync_catalog['streams'] is a list of dicts {stream:, config:}
         self.schedule = {}
         self.status = None
+
+    def to_payload(self):
+        pass  # TODO: implement the to_payload method
 
 class StreamDto:
     """Data transfer object class for the stream, belongs to the connection abstraction"""

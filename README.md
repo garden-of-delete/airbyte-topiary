@@ -33,6 +33,10 @@ Tentacle will use the .yaml or .yml file extensions following the `source` and `
 
 During setup, Airbyte creates a default workspace called 'default'. Tentacle allows the user to specify an alternative existing workspace by name using the optional `--workspace` argument, followed by the name of the workspace.
 
+**Sync yaml to deployment**
+
+The yaml to deployment workflow takes a .yaml file as the origin and applies the configuration contained within to a destination Airbyte deployment.
+
 These optional arguments can be used in combination to define what to apply the sync operation to:
 - `--sources`
 - `--destinations`
@@ -40,10 +44,6 @@ These optional arguments can be used in combination to define what to apply the 
 - `--all` (same as `--sources --destinations --connections`)
 
 **Note:** if none of the four optional arguments above are given, no changes will be made to the `--target`.
-
-**Sync yaml to deployment**
-
-The yaml to deployment workflow takes a .yaml file as the origin and applies the configuration contained within to a destination Airbyte deployment.
 
 Basic usage could be something like:
 
@@ -62,7 +62,7 @@ There are a number of additional optional parameters that modify how a sync oper
 **Sync deployment to yaml**
 An existing Airbyte deployment can be written to a .yaml by following the `--target` argument with a filename having the .yaml or .yml extension. For example:
 
-`python tentacle.py sync http://123.456.789.0:8081 --target my_deployment.yml --all`
+`python tentacle.py sync http://123.456.789.0:8081 --target my_deployment.yml`
 
 Will write the configuration of all sources, destinations, and connections to `my_deployment.yml`.
 
