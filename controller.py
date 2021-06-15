@@ -1,6 +1,8 @@
 from airbyte_config_model import AirbyteConfigModel
 from airbyte_client import AirbyteClient
 from airbyte_dto_factory import *
+import utils
+import yaml
 
 class Controller:
     """The controller controls program flow and communicates with the outside world"""
@@ -9,6 +11,34 @@ class Controller:
 
     def instantiate_dto_factory(self, source_definitions, destination_definitions):
         self.dto_factory = AirbyteDtoFactory(source_definitions,destination_definitions)
+
+    def instantiate_client(self, args):
+        # if in sync mode and source is a yaml file
+        if utils.is_yaml(args.origin):
+            if utils.is_yaml(args.target):
+                print("Fatal error: --target must be followed by a valid "
+                      "Airbyte deployment url when the origin is a .yaml file")
+                exit(2)
+            client = AirbyteClient(args.target)
+        elif utils.is_yaml(args.target):
+            if utils.is_yaml(args.origin):
+                print("Fatal error: --target must be followed by a valid "
+                      "Airbyte deployment url when the origin is a .yaml file")
+                exit(2)
+            client = AirbyteClient(args.origin)
+        else:
+            print("Fatal error: the origin or --target must be a valid .yaml configuration file")
+            exit(2)
+        return client
+
+    def read_yaml_config(self, args):  # TODO: Move into controller
+        """get config from config.yml"""
+        if utils.is_yaml(args.origin):
+            yaml_config = yaml.safe_load(open(args.origin, 'r'))
+        else:
+            yaml_config = yaml.safe_load(open(args.target, 'r'))
+        secrets = yaml.safe_load(open(args.secrets, 'r'))
+        return yaml_config, secrets
 
     def get_definitions(self, client):
         """Retrieves source and destination definitions for configured sources"""
