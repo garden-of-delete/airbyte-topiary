@@ -1,5 +1,6 @@
 import yaml
 
+
 class AirbyteConfigModel:
     def __init__(self):
         self.sources = {}
@@ -9,7 +10,11 @@ class AirbyteConfigModel:
         self.global_config = {}
 
     def write_yaml(self, filename):
-        pass
+        payload = {'sources': [source.to_payload() for source in self.sources.values()],
+                   'destinations': [destination.to_payload() for destination in self.destinations.values()],
+                   'connections': [connection.to_payload() for connection in self.connections.values()]}
+        with open(filename, 'w') as yaml_file:
+            yaml.safe_dump(payload, yaml_file)
 
     def apply_to_deployment(self, client):
         pass
