@@ -37,7 +37,7 @@ from airbyte_client import AirbyteClient
 from controller import Controller
 
 
-VALID_MODES = ['wipe', 'update', 'validate', 'sync']
+VALID_MODES = ['wipe', 'validate', 'sync']
 
 def is_yaml(name):
     if name.strip().split('.')[-1] == 'yml' or name.strip().split('.')[-1] == 'yaml':
@@ -123,7 +123,7 @@ if __name__ == "__main__":
 
     # Required positional argument
     #parser.add_argument("arg", help="Required positional argument")
-    parser.add_argument("mode", help="Operating mode. Choices are sync, validate, wipe, update")
+    parser.add_argument("mode", help="Operating mode. Choices are sync, validate, wipe")
     parser.add_argument("origin", help="location of the source Airbyte deployment or yaml file")
 
     # Optional argument flag which defaults to False
