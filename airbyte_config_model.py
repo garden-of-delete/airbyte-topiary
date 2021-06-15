@@ -19,12 +19,6 @@ class AirbyteConfigModel:
     def apply_to_deployment(self, client):
         pass
 
-    def full_wipe(self, client):
-        self.wipe_sources(client)
-        self.wipe_destinations(client)
-        # self.wipe_connections(client)
-        pass
-
     def wipe_sources(self, client):
         """Removes all sources in self.sources from the deployment and the model"""
         # TODO: delete_sources would ideally return an AirbyteResponse and not a bool.
@@ -50,6 +44,7 @@ class AirbyteConfigModel:
 
     def validate(self, client):
         """this function validates the model and all included connectors"""
+        print("Validating connectors...")
         for source in self.sources.values():
             response = client.check_source_connection(source).payload
             print("Source is valid: " + source.source_id + ' ' + repr(response['jobInfo']['succeeded']))

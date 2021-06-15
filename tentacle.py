@@ -16,8 +16,9 @@ TODO LIST:
     - (stretch): modification of connections
 - Deployment to yaml workflow
 - (done) Wipe target workflow
-- (in progress) Readme
-- License
+- (in progress) README.md
+- (done) License
+- Decorators
 - Tests!
 - Post 0.1.0
     - CI
@@ -40,7 +41,7 @@ VALID_MODES = ['wipe', 'validate', 'sync']
 
 
 def main(args):
-    """ Main entry point of the app. Chooses the correct controller workflow"""
+    """Handles arguments and setup tasks. Invokes controller methods to carry out the specified workflow"""
     # setup
     controller = Controller()
     client = controller.instantiate_client(args)
@@ -50,7 +51,7 @@ def main(args):
     print("main: read configuration from source yaml")
     airbyte_model = controller.get_airbyte_configuration(client, workspace)
 
-    # execute the selected workflow
+    # sync workflow
     if args.mode == 'sync':
         if utils.is_yaml(args.target):
             airbyte_model.write_yaml(args.target)
@@ -58,8 +59,7 @@ def main(args):
             yaml_config, secrets = controller.read_yaml_config(args)
             new_dtos = controller.build_dtos_from_yaml_config(yaml_config, secrets)
             if args.wipe:
-                print("Wiping deployment: " + client.airbyte_url)
-                airbyte_model.full_wipe(client)
+                controller.wipe_all(airbyte_model, client)
             print("Applying changes to deployment: " + client.airbyte_url)
             if args.sources or args.all:
                 controller.sync_sources(airbyte_model, client, workspace, new_dtos)
@@ -68,11 +68,18 @@ def main(args):
             if args.connections or args.all:
                 pass  # TODO: implement controller.sync_connection
             if args.validate:
-                print("Validating connectors...")
                 airbyte_model.validate(client)
+
+    # wipe workflow
     elif args.mode == 'wipe':
-        print("Wiping deployment: " + client.airbyte_url)
-        controller.wipe(airbyte_model, client)
+        if args.sources or args.all:
+            controller.wipe_sources(airbyte_model, client)
+        if args.destinations or args.all:
+            controller.wipe_destinations(airbyte_model, client)
+        if args.connections or args.all:
+            pass  # TODO: implement controller.wipe_connections
+
+    # validate workflow
     elif args.mode == 'validate':
         print("Validating connectors...")
         airbyte_model.validate(client)

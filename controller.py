@@ -5,7 +5,7 @@ import utils
 import yaml
 
 class Controller:
-    """The controller controls program flow and communicates with the outside world"""
+    """Communicates with the user. Provides methods to execute the subtasks for each workflow."""
     def __init__(self):
         self.dto_factory = None
 
@@ -13,8 +13,11 @@ class Controller:
         self.dto_factory = AirbyteDtoFactory(source_definitions,destination_definitions)
 
     def instantiate_client(self, args):
+        # if origin is a deployment and target is not specified
+        if not utils.is_yaml(args.origin) and args.target is None:
+            client = AirbyteClient(args.origin)
         # if in sync mode and source is a yaml file
-        if utils.is_yaml(args.origin):
+        elif utils.is_yaml(args.origin):
             if utils.is_yaml(args.target):
                 print("Fatal error: --target must be followed by a valid "
                       "Airbyte deployment url when the origin is a .yaml file")
@@ -31,7 +34,7 @@ class Controller:
             exit(2)
         return client
 
-    def read_yaml_config(self, args):  # TODO: Move into controller
+    def read_yaml_config(self, args):
         """get config from config.yml"""
         if utils.is_yaml(args.origin):
             yaml_config = yaml.safe_load(open(args.origin, 'r'))
@@ -116,8 +119,22 @@ class Controller:
             else:
                 pass  # TODO: modify existing destination
 
-    def wipe(self, airbyte_model, client):
-        airbyte_model.full_wipe(client)
+    def wipe_sources(self, airbyte_model, client):
+        print("Wiping sources on " + client.airbyte_url)
+        airbyte_model.wipe_sources(client)
+
+    def wipe_destinations(self, airbyte_model, client):
+        print("Wiping destinations on " + client.airbyte_url)
+        airbyte_model.wipe_destinations(client)
+
+    def wipe_all(self, airbyte_model, client):
+        print("Wiping deployment: " + client.airbyte_url)
+        airbyte_model.wipe_sources(client)
+        airbyte_model.wipe_destinations(client)
+        # airbyte_model.wipe_connections(client)
+
+    def wipe_connections(self):
+        pass  # TODO: implement controller.wipe_connections
 
     def validate(self):
         pass
