@@ -1,14 +1,51 @@
 from airbyte_config_model import AirbyteConfigModel
 from airbyte_client import AirbyteClient
 from airbyte_dto_factory import *
+import utils
+import yaml
 
 class Controller:
-    """The controller controls program flow and communicates with the outside world"""
+    """Communicates with the user. Provides methods to execute the subtasks for each workflow."""
     def __init__(self):
         self.dto_factory = None
 
     def instantiate_dto_factory(self, source_definitions, destination_definitions):
         self.dto_factory = AirbyteDtoFactory(source_definitions,destination_definitions)
+
+    def instantiate_client(self, args):
+        # if origin is a deployment and target is not specified
+        if not utils.is_yaml(args.origin) and args.target is None:
+            client = AirbyteClient(args.origin)
+        # if in sync mode and source is a yaml file
+        elif utils.is_yaml(args.origin):
+            if utils.is_yaml(args.target):
+                print("Fatal error: --target must be followed by a valid "
+                      "Airbyte deployment url when the origin is a .yaml file")
+                exit(2)
+            client = AirbyteClient(args.target)
+        elif utils.is_yaml(args.target):
+            if utils.is_yaml(args.origin):
+                print("Fatal error: --target must be followed by a valid "
+                      "Airbyte deployment url when the origin is a .yaml file")
+                exit(2)
+            client = AirbyteClient(args.origin)
+        else:
+            print("Fatal error: the origin or --target must be a valid .yaml configuration file")
+            exit(2)
+        return client
+
+    def read_yaml_config(self, args):
+        """get config from config.yml"""
+        secrets = None
+        if utils.is_yaml(args.origin):
+            yaml_config = yaml.safe_load(open(args.origin, 'r'))
+        else:
+            yaml_config = yaml.safe_load(open(args.target, 'r'))
+        if args.secrets:
+            secrets = yaml.safe_load(open(args.secrets, 'r'))  # TODO: if no --secrets specified, skip
+        else:
+            print("Warning: Reading yaml config but --secrets not specified.")
+        return yaml_config, secrets
 
     def get_definitions(self, client):
         """Retrieves source and destination definitions for configured sources"""
@@ -19,10 +56,11 @@ class Controller:
 
     def get_airbyte_configuration(self, client, workspace):
         """Retrieves the configuration from an airbyte deployment and returns an AirbyteConfigModel representing it"""
+        print("Reading configuration from source yaml")
         configured_sources = client.get_configured_sources(workspace).payload['sources']
         configured_destinations = client.get_configured_destinations(workspace).payload['destinations']
         configured_connections = client.get_configured_connections(workspace).payload['connections']
-        print("main: retrieved configuration from: " + client.airbyte_url)
+        print("Retrieved configuration from: " + client.airbyte_url)
         airbyte_model = AirbyteConfigModel()
         for source in configured_sources:
             source_dto = self.dto_factory.build_source_dto(source)
@@ -36,6 +74,7 @@ class Controller:
         return airbyte_model
 
     def get_workspace(self, args, client):
+        """Retrieves workspace specified by the --workspace argument, or the default workspace otherwise"""
         if args.workspace_slug:
             workspace = client.get_workspace_by_slug(args.workspace_slug).payload
         else:
@@ -43,6 +82,7 @@ class Controller:
         return workspace
 
     def build_dtos_from_yaml_config(self, yaml_config, secrets):
+        """Creates a dict of new DTOs by parsing the user specified .yml config file"""
         new_dtos = {}
         if 'global' in yaml_config.keys():
             for item in yaml_config['global']:
@@ -86,8 +126,43 @@ class Controller:
             else:
                 pass  # TODO: modify existing destination
 
-    def wipe(self, airbyte_model, client):
-        airbyte_model.full_wipe(client)
+    def wipe_sources(self, airbyte_model, client):
+        """Wrapper for AirbyteConfigModel.wipe_sources"""
+        print("Wiping sources on " + client.airbyte_url)
+        airbyte_model.wipe_sources(client)
 
-    def validate(self):
-        pass
+    def wipe_destinations(self, airbyte_model, client):
+        """Wrapper for AirbyteConfigModel.wipe_destinations"""
+        print("Wiping destinations on " + client.airbyte_url)
+        airbyte_model.wipe_destinations(client)
+
+    def wipe_connections(self, airbyte_model, client):
+        """Wrapper for AirbyteConfigModel.wipe_connections"""
+        pass  # TODO: implement controller.wipe_connections
+
+    def wipe_all(self, airbyte_model, client):
+        """Wipes all sources, destinations, and connections in the specified airbyte deployment"""
+        print("Wiping deployment: " + client.airbyte_url)
+        self.wipe_sources(airbyte_model, client)
+        self.wipe_destinations(airbyte_model, client)
+        # self.wipe_connections(client)
+
+    def validate_sources(self, airbyte_model, client):
+        """Wrapper for AirbyteConfigModel.validate_sources"""
+        print("Validating sources...")
+        airbyte_model.validate_sources(client)
+
+    def validate_destinations(self, airbyte_model, client):
+        """Wrapper for AirbyteConfigModel.validate_destinations"""
+        print("Validating destinations...")
+        airbyte_model.validate_destinations(client)
+
+    def validate_connections(self, airbyte_mopdel, client):
+        """Wrapper for AirbyteConfigModel.validate_connections"""
+        pass  # TODO: implement Controller.validate_connections
+
+    def validate_all(self, airbyte_model, client):
+        """Validates all sources, destinations, and connections in the specified AirbyteConfigModel"""
+        self.validate_sources(airbyte_model, client)
+        self.validate_destinations(airbyte_model, client)
+        #self.validate_connections(airbyte_model, client)

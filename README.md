@@ -68,17 +68,35 @@ Will write the configuration of all sources, destinations, and connections to `m
 
 Note in this case, no `--secrets` file is specified, since it has no meaning in this workflow. Secrets can't be extracted from the Airbyte API.
 
-### Wipe a deployment
+## Wipe a deployment
+The `wipe` mode deletes sources, destinations, connections or any combination in an existing Airbyte deployment.
 
-### Validate a deployment
+`python tentacle.py wipe http://123.456.789.0:8081 --all`
 
-## Design
+As with `sync`ing a .yaml file to a deployment, these optional arguments can be used in combination to define what to apply the wipe operation to:
+- `--sources`
+- `--destinations`
+- `--connections`
+- `--all` (same as `--sources --destinations --connections`)
 
-## Contributing
+## Validate a deployment
+The `validate` mode validates sources, destinations, connections or any combination in an existing Airbyte deployment.
 
-## Acknowledgements
+`python tentacle.py validate http://123.456.789.0:8081 --all`
 
-## License
+As with `wipe` mode, these optional arguments can be used in combination to define what to apply the `validate` operation to:
+- `--sources`
+- `--destinations`
+- `--connections`
+- `--all` (same as `--sources --destinations --connections`)
+
+# Design
+
+# Contributing
+
+# Acknowledgements
+
+# License
 Copyright 2021 Robert Stolz
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:

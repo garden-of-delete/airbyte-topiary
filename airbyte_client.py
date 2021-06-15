@@ -74,7 +74,6 @@ class AirbyteClient:
         r = requests.post(route, json=payload)
         return AirbyteResponse(r)
 
-
     def delete_source(self, source_dto):
         """Route: POST /v1/sources/delete"""
         route = self.airbyte_url + 'api/v1/sources/delete'
