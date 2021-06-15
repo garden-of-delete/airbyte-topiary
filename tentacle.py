@@ -48,7 +48,6 @@ def main(args):
     definitions = controller.get_definitions(client)
     controller.instantiate_dto_factory(definitions['source_definitions'], definitions['destination_definitions'])
     workspace = controller.get_workspace(args, client)
-    print("main: read configuration from source yaml")
     airbyte_model = controller.get_airbyte_configuration(client, workspace)
 
     # sync workflow

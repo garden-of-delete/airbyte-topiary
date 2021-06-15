@@ -52,10 +52,11 @@ class Controller:
 
     def get_airbyte_configuration(self, client, workspace):
         """Retrieves the configuration from an airbyte deployment and returns an AirbyteConfigModel representing it"""
+        print("Reading configuration from source yaml")
         configured_sources = client.get_configured_sources(workspace).payload['sources']
         configured_destinations = client.get_configured_destinations(workspace).payload['destinations']
         configured_connections = client.get_configured_connections(workspace).payload['connections']
-        print("main: retrieved configuration from: " + client.airbyte_url)
+        print("Retrieved configuration from: " + client.airbyte_url)
         airbyte_model = AirbyteConfigModel()
         for source in configured_sources:
             source_dto = self.dto_factory.build_source_dto(source)
