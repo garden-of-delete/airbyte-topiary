@@ -53,3 +53,18 @@ class AirbyteConfigModel:
             print("Destination is valid: " + destination.destination_id + ' ' + repr(response['jobInfo']['succeeded']))
         for connection in self.connections.values():
             pass  # TODO: implement connection validation
+
+    def validate_sources(self, client):
+        for source in self.sources.values():
+            response = client.check_source_connection(source).payload
+            print("Source is valid: " + source.source_id + ' ' + repr(response['jobInfo']['succeeded']))
+
+    def validate_destinations(self, client):
+        for destination in self.destinations.values():
+            response = client.check_destination_connection(destination).payload
+            print("Destination is valid: " + destination.destination_id + ' ' + repr(response['jobInfo']['succeeded']))
+            
+    def validate_connections(self, client):
+        for connection in self.connections.values():
+            response = client.check_connection_connection(connection).payload
+            print("connection is valid: " + connection.connection_id + ' ' + repr(response['jobInfo']['succeeded']))

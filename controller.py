@@ -36,11 +36,15 @@ class Controller:
 
     def read_yaml_config(self, args):
         """get config from config.yml"""
+        secrets = None
         if utils.is_yaml(args.origin):
             yaml_config = yaml.safe_load(open(args.origin, 'r'))
         else:
             yaml_config = yaml.safe_load(open(args.target, 'r'))
-        secrets = yaml.safe_load(open(args.secrets, 'r'))
+        if args.secrets:
+            secrets = yaml.safe_load(open(args.secrets, 'r'))  # TODO: if no --secrets specified, skip
+        else:
+            print("Warning: Reading yaml config but --secrets not specified.")
         return yaml_config, secrets
 
     def get_definitions(self, client):
@@ -133,10 +137,22 @@ class Controller:
 
     def wipe_all(self, airbyte_model, client):
         print("Wiping deployment: " + client.airbyte_url)
-        airbyte_model.wipe_sources(client)
-        airbyte_model.wipe_destinations(client)
-        # airbyte_model.wipe_connections(client)
+        self.wipe_sources(airbyte_model, client)
+        self.wipe_destinations(airbyte_model, client)
+        # self.wipe_connections(client)
 
-    def validate(self, airbyte_model: AirbyteConfigModel, client):
-        print("Validating connectors...")
-        airbyte_model.validate(client)
+    def validate_sources(self, airbyte_model, client):
+        print("Validating sources...")
+        airbyte_model.validate_sources(client)
+
+    def validate_destinations(self, airbyte_model, client):
+        print("Validating destinations...")
+        airbyte_model.validate_destinations(client)
+
+    def validate_connections(self, airbyte_mopdel, client):
+        pass  # TODO: implement Controller.validate_connections
+
+    def validate_all(self, airbyte_model, client):
+        self.validate_sources(airbyte_model, client)
+        self.validate_destinations(airbyte_model, client)
+        #self.validate_connections(airbyte_model, client)

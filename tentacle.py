@@ -64,12 +64,14 @@ def main(args):
             print("Applying changes to deployment: " + client.airbyte_url)
             if args.sources or args.all:
                 controller.sync_sources(airbyte_model, client, workspace, new_dtos)
+                if args.validate:
+                    controller.validate_sources(airbyte_model, client)
             if args.destinations or args.all:
                 controller.sync_destinations(airbyte_model, client, workspace, new_dtos)
+                if args.validate:
+                    controller.validate_destinations(airbyte_model, client)
             if args.connections or args.all:
                 pass  # TODO: implement controller.sync_connection
-            if args.validate:
-                airbyte_model.validate(client)
 
     # wipe workflow
     elif args.mode == 'wipe':
@@ -82,7 +84,12 @@ def main(args):
 
     # validate workflow
     elif args.mode == 'validate':
-        airbyte_model.validate(client)
+        if args.sources or args.all:
+            controller.validate_sources(airbyte_model, client)
+        if args.destinations or args.all:
+            controller.validate_destinations(airbyte_model, client)
+        if args.connections or args.all:
+            pass  # TODO: implement controller.wipe_connections
     else:
         print("main: unrecognized mode " + args.mode)
 
