@@ -20,6 +20,7 @@ TODO LIST:
 - (in progress) README.md
 - (done) License
 - Decorators
+- Type hinting
 - Tests!
 - Post 0.1.0
     - CI
@@ -81,7 +82,6 @@ def main(args):
 
     # validate workflow
     elif args.mode == 'validate':
-        print("Validating connectors...")
         airbyte_model.validate(client)
     else:
         print("main: unrecognized mode " + args.mode)
