@@ -114,7 +114,7 @@ class Controller:
                 print("Created source: " + source_dto.source_id)
                 airbyte_model.sources[source_dto.source_id] = source_dto
             else:
-                pass  # TODO: modify existing source
+                client.update_source(new_source)
 
     def sync_destinations(self, airbyte_model, client, workspace, new_dtos):
         for new_destination in new_dtos['destinations']:

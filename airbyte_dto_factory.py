@@ -32,7 +32,7 @@ class AirbyteDtoFactory:
         if 'sourceId' in source:
             r.source_id = source['sourceId']
         if 'workspaceId' in source:
-            r.workspace_id = source['sourceId']
+            r.workspace_id = source['workspaceId']
         if 'tag' in source:
             r.tag = source['tag']
         # TODO: check for validity?
@@ -52,7 +52,7 @@ class AirbyteDtoFactory:
         if 'destinationId' in destination:
             r.destination_id = destination['destinationId']
         if 'workspaceId' in destination:
-            r.workspace_id = destination['destinationId']
+            r.workspace_id = destination['workspaceId']
         if 'tag' in destination:
             r.tag = destination['tag']
         # TODO: check for validity?
