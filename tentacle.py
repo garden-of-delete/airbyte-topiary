@@ -10,9 +10,9 @@ TODO LIST:
 - Finalize the yaml to deployment workflow
     - (done) Add print statements to create_source and create_destination
     - (done) Add ability for user to override workspace slug
-    - (in progress) Address modification of existing sources and destinations
+    - (done) Address modification of existing sources and destinations
     - (done) Clarify all arg processor functions related to this workflow
-    - implement the --dump option
+    - (in progress) implement the --backup option
     - (stretch): modification of connections
 - (done) Deployment to yaml workflow
 - (done) Wipe target workflow
@@ -59,6 +59,8 @@ def main(args):
         else:
             yaml_config, secrets = controller.read_yaml_config(args)
             new_dtos = controller.build_dtos_from_yaml_config(yaml_config, secrets)
+            if args.backup_file:
+                airbyte_model.write_yaml(args.backup_file)
             if args.wipe:
                 controller.wipe_all(airbyte_model, client)
             print("Applying changes to deployment: " + client.airbyte_url)
@@ -120,8 +122,8 @@ if __name__ == "__main__":
     # Optional argument which requires a parameter (eg. -d test)
     parser.add_argument("--target", action="store", dest="target",
                         help="specifies the airbyte deployment or yaml file to modify")
-    parser.add_argument("--dump", action="store", dest="dump_file",
-                        help="specifies a .yaml file to dump the configuration of the destination before syncing")
+    parser.add_argument("--backup", action="store", dest="backup_file",
+                        help="specifies a .yaml file to backup the configuration of the target before syncing")
     parser.add_argument("--secrets", action="store", dest="secrets",
                         help="specifies a .yaml file containing the secrets for each source and destination type")
     parser.add_argument("--workspace", action="store", dest="workspace_slug",
