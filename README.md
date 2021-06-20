@@ -55,7 +55,7 @@ Almost all sources and destinations will have associated secrets. Tentacle ignor
 There are a number of additional optional parameters that modify how a sync operation is carried out when syncing yaml to deployment.
 - `--wipe` removes all sources, destinations, and connectors **before** applying config.yml
 - `--validate` validates the sources, destinations, and connections on the destination Airbyte deployment **after** applying changes.
-- `--dump` dumps the full configuration of the destination deployment to a configuration
+- `--backup` followed by a filename. Dumps the full configuration of the destination deployment to a configuration
 **before** applying the sync operation.
 
 ### Modifying existing sources and destinations
