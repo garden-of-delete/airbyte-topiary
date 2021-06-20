@@ -88,9 +88,14 @@ class AirbyteClient:
         r = requests.post(route, json={'workspaceId': workspace['workspaceId']})
         return AirbyteResponse(r)
 
-    def update_source(self):
+    def update_source(self, source_dto):
         """Route: POST /v1/sources/update"""
-        pass
+        route = self.airbyte_url + 'api/v1/sources/update'
+        payload = {'sourceId': source_dto.source_id,
+                   'connectionConfiguration': source_dto.connection_configuration,
+                   'name': source_dto.name}
+        r = requests.post(route, json=payload)
+        return AirbyteResponse(r)
 
     def check_destination_connection(self, destination_dto):
         """Route: POST /v1/destinations/check_connection"""
@@ -130,9 +135,14 @@ class AirbyteClient:
         r = requests.post(route, json={'workspaceId': workspace['workspaceId']})
         return AirbyteResponse(r)
 
-    def update_destination(self):
+    def update_destination(self, destination_dto):
         """Route: POST /v1/destinations/update"""
-        pass
+        route = self.airbyte_url + 'api/v1/destinations/update'
+        payload = {'destinationId': destination_dto.destination_id,
+                   'connectionConfiguration': destination_dto.connection_configuration,
+                   'name': destination_dto.name}
+        r = requests.post(route, json=payload)
+        return AirbyteResponse(r)
 
     def create_connection(self):
         """Route: POST /v1/connections/create"""
