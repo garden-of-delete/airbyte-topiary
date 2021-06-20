@@ -10,9 +10,9 @@ TODO LIST:
 - Finalize the yaml to deployment workflow
     - (done) Add print statements to create_source and create_destination
     - (done) Add ability for user to override workspace slug
-    - (in progress) Address modification of existing sources and destinations
+    - (done) Address modification of existing sources and destinations
     - (done) Clarify all arg processor functions related to this workflow
-    - implement the --dump option
+    - (in progress) implement the --dump option
     - (stretch): modification of connections
 - (done) Deployment to yaml workflow
 - (done) Wipe target workflow
