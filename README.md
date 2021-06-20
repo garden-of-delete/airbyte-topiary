@@ -58,6 +58,10 @@ There are a number of additional optional parameters that modify how a sync oper
 - `--dump` dumps the full configuration of the destination deployment to a configuration
 **before** applying the sync operation.
 
+### Modifying existing sources and destinations
+
+If the yaml file specifies connectors with `sourceId` or `destinationId` matching connectors in the target Airbyte deployment, then tentacle will attempt to modify the existing connector instead of creating a new one. Any changes to the `connectionConfiguration` will be applied to the existing connector.
+
 ### Sync deployment to yaml
 
 An existing Airbyte deployment can be written to a .yaml by following the `--target` argument with a filename having the .yaml or .yml extension. For example:
