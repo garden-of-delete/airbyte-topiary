@@ -135,9 +135,14 @@ class AirbyteClient:
         r = requests.post(route, json={'workspaceId': workspace['workspaceId']})
         return AirbyteResponse(r)
 
-    def update_destination(self):
+    def update_destination(self, destination_dto):
         """Route: POST /v1/destinations/update"""
-        pass
+        route = self.airbyte_url + 'api/v1/destinations/update'
+        payload = {'destinationId': destination_dto.destination_id,
+                   'connectionConfiguration': destination_dto.connection_configuration,
+                   'name': destination_dto.name}
+        r = requests.post(route, json=payload)
+        return AirbyteResponse(r)
 
     def create_connection(self):
         """Route: POST /v1/connections/create"""

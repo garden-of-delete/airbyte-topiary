@@ -129,7 +129,13 @@ class Controller:
                 print("Created destination: " + destination_dto.destination_id)
                 airbyte_model.destinations[destination_dto.destination_id] = destination_dto
             else:
-                pass  # TODO: modify existing destination
+                response = client.update_destination(new_destination)
+                if response.ok:
+                    destination_dto = self.dto_factory.build_destination_dto(response.payload)
+                    airbyte_model.destinations[destination_dto.destination_id] = destination_dto
+                    print("Modified destination: " + destination_dto.destination_id)
+                else:
+                    print("Error: unable to modify destination: " + new_destination.destination_id)
 
     def wipe_sources(self, airbyte_model, client):
         """Wrapper for AirbyteConfigModel.wipe_sources"""
