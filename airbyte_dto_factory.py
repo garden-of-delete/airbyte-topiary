@@ -6,17 +6,18 @@ class AirbyteDtoFactory:
 
     def populate_secrets(self, secrets, new_dtos):
         # TODO: Find a better way to deal with unpredictably named secrets
-        for source in new_dtos['sources']:
-            if source.source_name in secrets['sources']:
-                if 'access_token' in source.connection_configuration:
-                    source.connection_configuration['access_token'] = secrets['sources'][source.source_name]['access_token']
-                elif 'token' in source.connection_configuration:
-                    source.connection_configuration['token'] = secrets['sources'][source.source_name]['token']
-        for destination in new_dtos['destinations']:
-            if destination.destination_name in secrets['destinations']:
-                if 'password' in destination.connection_configuration:
-                    destination.connection_configuration['password'] = secrets['destinations'][destination.destination_name]['password']
-        pass
+        if 'sources' in new_dtos:
+            for source in new_dtos['sources']:
+                if source.source_name in secrets['sources']:
+                    if 'access_token' in source.connection_configuration:
+                        source.connection_configuration['access_token'] = secrets['sources'][source.source_name]['access_token']
+                    elif 'token' in source.connection_configuration:
+                        source.connection_configuration['token'] = secrets['sources'][source.source_name]['token']
+        if 'destinations' in new_dtos:
+            for destination in new_dtos['destinations']:
+                if destination.destination_name in secrets['destinations']:
+                    if 'password' in destination.connection_configuration:
+                        destination.connection_configuration['password'] = secrets['destinations'][destination.destination_name]['password']
 
     def build_source_dto(self, source):
         r = SourceDto()
