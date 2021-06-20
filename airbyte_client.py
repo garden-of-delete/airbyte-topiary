@@ -94,7 +94,6 @@ class AirbyteClient:
         payload = {'sourceId': source_dto.source_id,
                    'connectionConfiguration': source_dto.connection_configuration,
                    'name': source_dto.name}
-
         r = requests.post(route, json=payload)
         return AirbyteResponse(r)
 

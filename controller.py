@@ -49,18 +49,17 @@ class Controller:
 
     def get_definitions(self, client):
         """Retrieves source and destination definitions for configured sources"""
+        print("Retrieving source and destination definitions from: " + client.airbyte_url)
         available_sources = client.get_source_definitions().payload
         available_destinations = client.get_destination_definitions().payload
-        print("main: retrieved source and destination definitions from: " + client.airbyte_url)
         return {'source_definitions': available_sources, 'destination_definitions': available_destinations}
 
     def get_airbyte_configuration(self, client, workspace):
         """Retrieves the configuration from an airbyte deployment and returns an AirbyteConfigModel representing it"""
-        print("Reading configuration from source yaml")
+        print("Retrieving Airbyte configuration from: " + client.airbyte_url)
         configured_sources = client.get_configured_sources(workspace).payload['sources']
         configured_destinations = client.get_configured_destinations(workspace).payload['destinations']
         configured_connections = client.get_configured_connections(workspace).payload['connections']
-        print("Retrieved configuration from: " + client.airbyte_url)
         airbyte_model = AirbyteConfigModel()
         for source in configured_sources:
             source_dto = self.dto_factory.build_source_dto(source)
@@ -114,7 +113,13 @@ class Controller:
                 print("Created source: " + source_dto.source_id)
                 airbyte_model.sources[source_dto.source_id] = source_dto
             else:
-                client.update_source(new_source)
+                response = client.update_source(new_source)
+                if response.ok:
+                    source_dto = self.dto_factory.build_source_dto(response.payload)
+                    airbyte_model.sources[source_dto.source_id] = source_dto
+                    print("Modified source: " + source_dto.source_id)
+                else:
+                    print("Error: unable to modify source: " + new_source.source_id)
 
     def sync_destinations(self, airbyte_model, client, workspace, new_dtos):
         for new_destination in new_dtos['destinations']:
