@@ -5,14 +5,14 @@ This is a simple, open-source tool designed to help manage Airbyte deployments a
 TODO LIST:
 - (done) Implement "check" routes for source and destination validation
 - (done) Drop description and code supporting the deployment to deployment use case
-- Implement the connection routes, dto class, and all associated functions
+- (in progress) Implement the connection routes, dto class, and all associated functions
 - (done) Restructure main method as a proper controller. All feedback to user should come from controller
 - Finalize the yaml to deployment workflow
     - (done) Add print statements to create_source and create_destination
     - (done) Add ability for user to override workspace slug
     - (done) Address modification of existing sources and destinations
     - (done) Clarify all arg processor functions related to this workflow
-    - (in progress) implement the --backup option
+    - (done) implement the --backup option
     - (stretch): modification of connections
 - (done) Deployment to yaml workflow
 - (done) Wipe target workflow
