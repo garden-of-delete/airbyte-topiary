@@ -9,15 +9,12 @@ class AirbyteConfigModel:
         self.workspaces = {}
         self.global_config = {}
 
-    def write_yaml(self, filename):
+    def write_yaml(self, filename):  # TODO: Move out into Controller
         payload = {'sources': [source.to_payload() for source in self.sources.values()],
                    'destinations': [destination.to_payload() for destination in self.destinations.values()],
                    'connections': [connection.to_payload() for connection in self.connections.values()]}
         with open(filename, 'w') as yaml_file:
             yaml.safe_dump(payload, yaml_file)
-
-    def apply_to_deployment(self, client):
-        pass
 
     def wipe_sources(self, client):
         """Removes all sources in self.sources from the deployment and the model"""
