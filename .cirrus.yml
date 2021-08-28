@@ -1,14 +1,9 @@
-env:
-  PATH: ${HOME}/.local/bin:${PATH}
+container:
+  image: python:slim
 
-# This template is used in most of the tasks
-.regular_task_template: &REGULAR_TASK_TEMPLATE
-  pip_cache: &pip-cache
-    folder: $PIP_CACHE
-  test_script: &test
-    - python -m pytest -v
-
-linux_mac_task:
-  matrix:
-    - name: test (Linux - 3.7)
-      container: { image: "python:3.7-buster" }
+test_task:
+  pip_cache:
+    folder: ~/.cache/pip
+    fingerprint_script: echo $PYTHON_VERSION && cat requirements.txt
+    populate_script: python3 -m pip install -r requirements.txt
+  test_script: python3 -m pytest -v
