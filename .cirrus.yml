@@ -2,13 +2,9 @@ task:
   container:
     image: python:slim
 
-  pip_cache:
-      folder: ~/.cache/pip
-      fingerprint_script: echo $PYTHON_VERSION && cat requirements.txt
-      populate_script: pip install -r requirements.txt
-
   matrix:
     name: Tests
-    test_script: |
-      pip install -r requirements.txt
-      python -m pytest -v
+    folder: ~/.cache/pip
+    fingerprint_script: echo $PYTHON_VERSION && cat requirements.txt
+    populate_script: pip install -r requirements.txt
+    test_script: python -m pytest -v
