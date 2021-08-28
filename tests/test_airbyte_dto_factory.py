@@ -63,7 +63,7 @@ def test_destinationdto__to_payload(dummy_destination_dto):
     assert payload['workspaceId'] == 'f3b9e848-790c-4cdd-a475-5c6bb156dc10'
     assert payload['connectionConfiguration']['database'] == 'postgres'
     assert payload['connectionConfiguration']['host'] == 'hostname.com'
-    assert payload['connectionConfiguration']['schema'] == 'Demo'
+    assert payload['connectionConfiguration']['schema'] == 'demo'
     assert payload['connectionConfiguration']['username'] == 'devrel_master'
     assert payload['name'] == 'devrel-rds'
     assert payload['destinationName'] == 'Postgres'
