@@ -9,4 +9,4 @@ task:
 
   matrix:
     name: Tests
-    test_script: pytest -v
+    test_script: python -m pytest -v
