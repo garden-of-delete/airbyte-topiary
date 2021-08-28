@@ -1,6 +1,6 @@
 task:
   matrix:
-    - name: Unit Tests (python:3.7-buster)
+    - name: Unit Tests (python:3.7-slim)
       container: {image: "python:3.7-slim"}
       populate_script: python3 -m pip install --verbose -r requirements.txt
       test_script: python3 -m pytest -v
