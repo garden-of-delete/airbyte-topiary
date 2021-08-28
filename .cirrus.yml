@@ -5,6 +5,6 @@ task:
       populate_script: python3 -m pip install --verbose -r requirements.txt
       test_script: python3 -m pytest -v
     - name: Unit Tests (python:3.8-buster)
-        container: {image: "python:3.8-buster"}
-        populate_script: python3 -m pip install --verbose -r requirements.txt
-        test_script: python3 -m pytest -v
+      container: {image: "python:3.8-buster"}
+      populate_script: python3 -m pip install --verbose -r requirements.txt
+      test_script: python3 -m pytest -v
