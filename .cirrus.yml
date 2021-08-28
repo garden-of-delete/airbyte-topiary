@@ -1,7 +1,12 @@
-container:
-  image: python:slim
-
-test_task:
-  name: Unit Tests (python:slim)
-  populate_script: python3 -m pip install --verbose -r requirements.txt
-  test_script: python3 -m pytest -v
+task:
+  matrix:
+    - name: Unit Tests (python:3.7-buster)
+      container:
+        image: python:3.7-buster
+      populate_script: python3 -m pip install --verbose -r requirements.txt
+      test_script: python3 -m pytest -v
+    - name: Unit Tests (python:3.8-buster)
+        container:
+          image: python:3.8-buster
+        populate_script: python3 -m pip install --verbose -r requirements.txt
+        test_script: python3 -m pytest -v
