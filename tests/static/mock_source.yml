@@ -1,0 +1,8 @@
+- connectionConfiguration:
+    access_token: '**********'
+    repository: apache/superset
+  name: apache/superset
+  sourceDefinitionId: ef69ef6e-aa7f-4af1-a01d-ef775033524e
+  sourceId: 7d95ec85-47c6-42d4-a7a2-8e5c22c810d2
+  sourceName: GitHub
+  workspaceId: f3b9e848-790c-4cdd-a475-5c6bb156dc10

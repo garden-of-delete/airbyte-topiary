@@ -1,0 +1,12 @@
+- connectionConfiguration:
+    database: postgres
+    host: devrel-rds.cxiotftzsypc.us-west-2.rds.amazonaws.com
+    password: '**********'
+    port: 5432
+    schema: demo
+    username: devrel_master
+  destinationDefinitionId: 25c5221d-dce2-4163-ade9-739ef790f503
+  destinationId: a41cb2f8-fcce-4c91-adfe-37c4586609f5
+  destinationName: Postgres
+  name: devrel-rds
+  workspaceId: f3b9e848-790c-4cdd-a475-5c6bb156dc10
