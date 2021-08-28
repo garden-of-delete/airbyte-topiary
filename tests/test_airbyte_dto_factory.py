@@ -57,12 +57,15 @@ def dummy_source_definitions():
 @pytest.fixture
 def dummy_destination_definitions():
     destination_definitions = [{'destinationDefinitionId': '22f6c74f-5699-40ff-833c-4a879ea40133',
-                                'name': 'BigQuery', 'dockerRepository': 'airbyte/destination-bigquery',
+                                'name': 'BigQuery',
+                                'dockerRepository': 'airbyte/destination-bigquery',
                                 'dockerImageTag': '0.3.12',
                                 'documentationUrl': 'https://docs.airbyte.io/integrations/destinations/bigquery',
                                 'icon': None},
-                               {'destinationDefinitionId': '25c5221d-dce2-4163-ade9-739ef790f503', 'name': 'Postgres',
-                                'dockerRepository': 'airbyte/destination-postgres', 'dockerImageTag': '0.3.5',
+                               {'destinationDefinitionId': '25c5221d-dce2-4163-ade9-739ef790f503',
+                                'name': 'Postgres',
+                                'dockerRepository': 'airbyte/destination-postgres',
+                                'dockerImageTag': '0.3.5',
                                 'documentationUrl': 'https://docs.airbyte.io/integrations/destinations/postgres',
                                 'icon': None}]
     return destination_definitions
@@ -82,6 +85,29 @@ def dummy_source_dict():
         'tag': 'tag1'
     }
     return source_dict
+
+
+@pytest.fixture
+def dummy_destination_dict():
+    """
+    Creates a dummy destination dict
+    """
+    destination_dict = {
+        'destinationDefinitionId': '25c5221d-dce2-4163-ade9-739ef790f503',
+        'destinationId': 'a41cb2f8-fcce-4c91-adfe-37c4586609f5',
+        'workspaceId': 'f3b9e848-790c-4cdd-a475-5c6bb156dc10',
+        'connectionConfiguration': {
+            'database': 'postgres',
+            'host': 'hostname.com',
+            'port': '5432',
+            'schema': 'demo',
+            'username': 'devrel_master'
+        },
+        'name': 'devrel-rds',
+        'destinationName': 'Postgres',
+        'tag': 'tag2'
+    }
+    return destination_dict
 
 
 @pytest.fixture
@@ -130,3 +156,14 @@ def test_dto_factory__build_source_dto(dummy_airbyte_dto_factory, dummy_source_d
     assert t.source_name == dummy_source_dto.source_name
     assert t.name == dummy_source_dto.name
     assert t.tag == dummy_source_dto.tag
+
+
+def test_dto_factory__build_destination_dto(dummy_airbyte_dto_factory, dummy_destination_dict, dummy_destination_dto):
+    t = dummy_airbyte_dto_factory.build_destination_dto(dummy_destination_dict)
+    assert t.destination_definition_id == dummy_destination_dto.destination_definition_id
+    assert t.destination_id == dummy_destination_dto.destination_id
+    assert t.workspace_id == dummy_destination_dto.workspace_id
+    assert t.connection_configuration == dummy_destination_dto.connection_configuration
+    assert t.destination_name == dummy_destination_dto.destination_name
+    assert t.name == dummy_destination_dto.name
+    assert t.tag == dummy_destination_dto.tag
