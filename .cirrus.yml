@@ -3,8 +3,5 @@ container:
 
 test_task:
   name: Unit Tests (python:slim)
-  pip_cache:
-    folder: ~/.cache/pip
-    populate_script: python3 -m pip install --verbose -r requirements.txt
-    fingerprint_script: echo $PYTHON_VERSION && cat requirements.txt
+  populate_script: python3 -m pip install --verbose -r requirements.txt
   test_script: python3 -m pytest -v
