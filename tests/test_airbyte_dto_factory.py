@@ -11,7 +11,9 @@ def dummy_source_dto():
     source.source_definition_id = 'ef69ef6e-aa7f-4af1-a01d-ef775033524e'
     source.source_id = '7d95ec85-47c6-42d4-a7a2-8e5c22c810d2'
     source.workspace_id = 'f3b9e848-790c-4cdd-a475-5c6bb156dc10'
-    source.connection_configuration = {}
+    source.connection_configuration = {
+        'access_token': '**********'
+    }
     source.name = 'apache/superset'
     source.source_name = 'GitHub'
     source.tag = 'tag1'
@@ -32,7 +34,8 @@ def dummy_destination_dto():
         'host': 'hostname.com',
         'port': '5432',
         'schema': 'demo',
-        'username': 'devrel_master'
+        'username': 'devrel_master',
+        'password': '**********'
     }
     destination.name = 'devrel-rds'
     destination.destination_name = 'Postgres'
@@ -42,6 +45,9 @@ def dummy_destination_dto():
 
 @pytest.fixture
 def dummy_source_definitions():
+    """
+    Create a dummy source definition (as dict)
+    """
     source_definitions = [{'sourceDefinitionId': 'c2281cee-86f9-4a86-bb48-d23286b4c7bd',
                           'name': 'Slack', 'dockerRepository': 'airbyte/source-slack',
                           'dockerImageTag': '0.1.9',
@@ -56,6 +62,9 @@ def dummy_source_definitions():
 
 @pytest.fixture
 def dummy_destination_definitions():
+    """
+    c=Create a dummy destination definition (as dict)
+    """
     destination_definitions = [{'destinationDefinitionId': '22f6c74f-5699-40ff-833c-4a879ea40133',
                                 'name': 'BigQuery',
                                 'dockerRepository': 'airbyte/destination-bigquery',
@@ -79,7 +88,7 @@ def dummy_source_dict():
         'sourceDefinitionId': 'ef69ef6e-aa7f-4af1-a01d-ef775033524e',
         'sourceId': '7d95ec85-47c6-42d4-a7a2-8e5c22c810d2',
         'workspaceId': 'f3b9e848-790c-4cdd-a475-5c6bb156dc10',
-        'connectionConfiguration': {},
+        'connectionConfiguration': {'access_token': '**********'},
         'name': 'apache/superset',
         'sourceName': 'GitHub',
         'tag': 'tag1'
@@ -101,7 +110,8 @@ def dummy_destination_dict():
             'host': 'hostname.com',
             'port': '5432',
             'schema': 'demo',
-            'username': 'devrel_master'
+            'username': 'devrel_master',
+            'password': '**********'
         },
         'name': 'devrel-rds',
         'destinationName': 'Postgres',
@@ -112,8 +122,28 @@ def dummy_destination_dict():
 
 @pytest.fixture
 def dummy_airbyte_dto_factory(dummy_source_definitions, dummy_destination_definitions):
+    """
+    Create a dummy AirbyteDtoFactory given a set of dummy source and destination definitions
+    """
     dto_factory = AirbyteDtoFactory(dummy_source_definitions, dummy_destination_definitions)
     return dto_factory
+
+
+@pytest.fixture
+def dummy_secrets_dict():
+    """
+    Create dummy secrets for the dummy sources and destinations (as dict)
+    """
+    secrets_dict = {
+        'sources': {
+            'GitHub': {'access_token': 'ghp_SECRET_TOKEN'},
+            'Slack': {'token': 'SLACK_SECRET_TOKEN'}
+        },
+        'destinations': {
+            'Postgres': {'password': 'SECRET_POSTGRES_PASSWORD'}
+        }
+    }
+    return secrets_dict
 
 
 def test_sourcedto__to_payload(dummy_source_dto):
@@ -125,7 +155,7 @@ def test_sourcedto__to_payload(dummy_source_dto):
     assert payload['sourceDefinitionId'] == 'ef69ef6e-aa7f-4af1-a01d-ef775033524e'
     assert payload['sourceId'] == '7d95ec85-47c6-42d4-a7a2-8e5c22c810d2'
     assert payload['workspaceId'] == 'f3b9e848-790c-4cdd-a475-5c6bb156dc10'
-    assert len(payload['connectionConfiguration']) == 0
+    assert payload['connectionConfiguration'] == {'access_token': '**********'}
     assert payload['name'] == 'apache/superset'
     assert payload['sourceName'] == 'GitHub'
 
@@ -148,6 +178,9 @@ def test_destinationdto__to_payload(dummy_destination_dto):
 
 
 def test_dto_factory__build_source_dto(dummy_airbyte_dto_factory, dummy_source_dict, dummy_source_dto):
+    """
+    Test AirbyteDtoFactory.build_source_dto
+    """
     t = dummy_airbyte_dto_factory.build_source_dto(dummy_source_dict)
     assert t.source_definition_id == dummy_source_dto.source_definition_id
     assert t.source_id == dummy_source_dto.source_id
@@ -159,6 +192,9 @@ def test_dto_factory__build_source_dto(dummy_airbyte_dto_factory, dummy_source_d
 
 
 def test_dto_factory__build_destination_dto(dummy_airbyte_dto_factory, dummy_destination_dict, dummy_destination_dto):
+    """
+    Test AirbyteDtoFactory.build_destination_dto
+    """
     t = dummy_airbyte_dto_factory.build_destination_dto(dummy_destination_dict)
     assert t.destination_definition_id == dummy_destination_dto.destination_definition_id
     assert t.destination_id == dummy_destination_dto.destination_id
@@ -167,3 +203,15 @@ def test_dto_factory__build_destination_dto(dummy_airbyte_dto_factory, dummy_des
     assert t.destination_name == dummy_destination_dto.destination_name
     assert t.name == dummy_destination_dto.name
     assert t.tag == dummy_destination_dto.tag
+
+
+def test_dto_factory__populate_secrets(dummy_airbyte_dto_factory, dummy_secrets_dict, dummy_source_dto,
+                                       dummy_destination_dto):
+    """
+    Test AirbyteDtoFactory.populate_secrets
+    Verifies placeholder secrets in the DTOs are being correctly overridden
+    """
+    new_dtos = {'sources': [dummy_source_dto], 'destinations': [dummy_destination_dto]}
+    dummy_airbyte_dto_factory.populate_secrets(dummy_secrets_dict, new_dtos)
+    assert new_dtos['sources'][0].connection_configuration['access_token'] == 'ghp_SECRET_TOKEN'
+    assert new_dtos['destinations'][0].connection_configuration['password'] == 'SECRET_POSTGRES_PASSWORD'
