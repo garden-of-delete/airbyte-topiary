@@ -16,7 +16,7 @@ class AirbyteConfigModel:
         with open(filename, 'w') as yaml_file:
             yaml.safe_dump(payload, yaml_file)
 
-    def apply_to_deployment(self, client):
+    def apply_to_deployment(self, client):  # TODO: resolve if we need this
         pass
 
     def wipe_sources(self, client):
