@@ -56,6 +56,7 @@ def main(args):
     if args.mode == 'sync':
         if utils.is_yaml(args.target):
             airbyte_model.write_yaml(args.target)
+            print("Output written to: " + args.target)
         else:
             yaml_config, secrets = controller.read_yaml_config(args)
             new_dtos = controller.build_dtos_from_yaml_config(yaml_config, secrets)

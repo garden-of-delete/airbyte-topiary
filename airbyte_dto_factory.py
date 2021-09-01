@@ -60,7 +60,16 @@ class ConnectionDto:
         self.status = None
 
     def to_payload(self):
-        pass  # TODO: implement the to_payload method
+        r = {}
+        r['connectionId'] = self.connection_id
+        r['sourceId'] = self.source_id
+        r['destinationId'] = self.destination_id
+        r['name'] = self.name
+        r['prefix'] = self.prefix
+        r['schedule'] = self.schedule
+        r['status'] = self.status
+        r['syncCatalog'] = self.sync_catalog
+        return r
 
 
 class StreamDto:
