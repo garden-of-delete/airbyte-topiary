@@ -44,6 +44,11 @@ def dummy_destination_dto():
 
 
 @pytest.fixture
+def dummy_connection_dto():
+    pass
+
+
+@pytest.fixture
 def dummy_source_definitions():
     """
     Create a dummy source definition (as dict)
@@ -78,6 +83,7 @@ def dummy_destination_definitions():
                                 'documentationUrl': 'https://docs.airbyte.io/integrations/destinations/postgres',
                                 'icon': None}]
     return destination_definitions
+
 
 @pytest.fixture
 def dummy_source_dict():
@@ -118,6 +124,11 @@ def dummy_destination_dict():
         'tag': 'tag2'
     }
     return destination_dict
+
+
+@pytest.fixture
+def dummy_connection_dict():
+    pass
 
 
 @pytest.fixture

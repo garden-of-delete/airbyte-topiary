@@ -33,6 +33,10 @@ def test_destination_dto__to_payload(dummy_destination_dto):
     assert payload['destinationName'] == 'Postgres'
 
 
+def test_connection_dto__to_payload(dummy_connection_dto):
+    assert False
+
+
 def test_dto_factory__build_source_dto(dummy_airbyte_dto_factory, dummy_source_dict, dummy_source_dto):
     """
     Test AirbyteDtoFactory.build_source_dto
@@ -59,6 +63,10 @@ def test_dto_factory__build_destination_dto(dummy_airbyte_dto_factory, dummy_des
     assert t.destination_name == dummy_destination_dto.destination_name
     assert t.name == dummy_destination_dto.name
     assert t.tag == dummy_destination_dto.tag
+
+
+def test_dto_factory__build_connection_dto(dummy_airbyte_dto_factory, dummy_connection_dict, dummy_connection_dto):
+    assert False
 
 
 def test_dto_factory__populate_secrets(dummy_airbyte_dto_factory, dummy_secrets_dict, dummy_source_dto,
