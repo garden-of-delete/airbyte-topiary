@@ -147,5 +147,8 @@ def dummy_secrets_dict():
 
 
 @pytest.fixture
-def dummy_airbyte_config_model():
+def dummy_populated_airbyte_config_model(dummy_source_dto, dummy_destination_dto):
     config_model = AirbyteConfigModel()
+    config_model.sources[dummy_source_dto.source_id] = dummy_source_dto
+    config_model.destinations[dummy_destination_dto.destination_id] = dummy_destination_dto
+    return config_model
