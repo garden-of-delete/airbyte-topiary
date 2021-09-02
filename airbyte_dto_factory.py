@@ -8,7 +8,7 @@ class SourceDto:
         self.connection_configuration = {}
         self.name = None
         self.source_name = None
-        self.tag = None
+        self.tags = []
 
     def to_payload(self):
         """sends this dto object to a dict formatted as a payload"""
@@ -32,7 +32,7 @@ class DestinationDto:
         self.connection_configuration = {}
         self.name = None
         self.destination_name = None
-        self.tag = None
+        self.tags = []
 
     def to_payload(self):
         """sends this dto object to a dict formatted as a payload"""
@@ -97,7 +97,7 @@ class StreamConfigDto:
         self.selected = None
 
 
-class WorkspaaceDto:
+class WorkspaceDto:
     """Data transfer object class for Workspace-type Airbyte abstractions"""
 
     def __init__(self):
@@ -144,8 +144,8 @@ class AirbyteDtoFactory:
             r.source_id = source['sourceId']
         if 'workspaceId' in source:
             r.workspace_id = source['workspaceId']
-        if 'tag' in source:
-            r.tag = source['tag']
+        if 'tags' in source:
+            r.tags = source['tags']
         # TODO: check for validity?
         return r
 
@@ -164,19 +164,26 @@ class AirbyteDtoFactory:
             r.destination_id = destination['destinationId']
         if 'workspaceId' in destination:
             r.workspace_id = destination['workspaceId']
-        if 'tag' in destination:
-            r.tag = destination['tag']
+        if 'tags' in destination:
+            r.tags = destination['tags']
         # TODO: check for validity?
         return r
 
     def build_connection_dto(self, connection):
         r = ConnectionDto()
-        r.connection_id = connection['connectionId']
-        r.name = connection['name']
         r.prefix = connection['prefix']
-        r.source_id = connection['sourceId']
-        r.destination_id = connection['destinationId']
-        r.sync_catalog = connection['syncCatalog']
+        if 'connectionId' in connection:  # connection is already defined in an Airbyte deployment
+            r.connection_id = connection['connectionId']
+        if 'sourceId' in connection:
+            r.source_id = connection['sourceId']
+        if 'destinationId' in connection:
+            r.destination_id = connection['destinationId']
+        if 'name' in connection:
+            r.name = connection['name']  # or groupName
+        else:
+            r.name = connection['groupName']
+        if 'syncCatalog' in connection:
+            r.sync_catalog = connection['syncCatalog']
         r.schedule = connection['schedule']
         r.status = connection['status']
         # TODO: check for validity?

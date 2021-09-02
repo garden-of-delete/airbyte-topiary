@@ -97,6 +97,13 @@ class AirbyteClient:
         r = requests.post(route, json=payload)
         return AirbyteResponse(r)
 
+    def discover_source_schema(self, source_dto):
+        """Route: POST /v1/sources/discover_schema"""
+        route = self.airbyte_url + 'api/v1/sources/discover_schema'
+        payload = {'sourceId': source_dto.source_id}
+        r = requests.post(route, json=payload)
+        return AirbyteResponse(r)
+
     def check_destination_connection(self, destination_dto):
         """Route: POST /v1/destinations/check_connection"""
         route = self.airbyte_url + 'api/v1/destinations/check_connection'
@@ -114,7 +121,6 @@ class AirbyteClient:
                    'connectionConfiguration': destination_dto.connection_configuration,
                    'name': destination_dto.name}
         r = requests.post(route, json=payload)
-
         return AirbyteResponse(r)
 
     def delete_destination(self, destination_dto):
@@ -144,9 +150,11 @@ class AirbyteClient:
         r = requests.post(route, json=payload)
         return AirbyteResponse(r)
 
-    def create_connection(self):
+    def create_connection(self, source_dto, destination_dto):
         """Route: POST /v1/connections/create"""
-        pass
+        route = self.airbyte_url + 'api/v1/connections/create'
+        source_schema = self.discover_source_schema(source_dto)  # TODO: test
+        payload = {}
 
     def delete_connection(self):
         """Route: POST /v1/connections/delete"""

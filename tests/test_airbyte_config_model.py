@@ -11,8 +11,8 @@ def test_airbyte_config_model__write_yaml(dummy_populated_airbyte_config_model, 
     t = yaml.safe_load(open("test_airbyte_config_model__write_yaml.yml", 'r'))
     assert len(t['sources']) == 1
     assert len(t['destinations']) == 1
-    dummy_source_dict.pop('tag')  # tags will never be part of a config model in a workflow where write_yaml is invoked
-    dummy_destination_dict.pop('tag')
+    dummy_source_dict.pop('tags')  # tags will never be part of a config model in a workflow where write_yaml is invoked
+    dummy_destination_dict.pop('tags')
     assert t['sources'][0] == dummy_source_dict
     assert t['destinations'][0] == dummy_destination_dict
 

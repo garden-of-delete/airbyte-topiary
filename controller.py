@@ -100,13 +100,15 @@ class Controller:
                 new_destinations.append(self.dto_factory.build_destination_dto(item))
             new_dtos['destinations'] = new_destinations
         if 'connections' in yaml_config.keys():
+            new_connections = []
             for item in yaml_config['connections']:
-                pass
+                new_connections.append(self.dto_factory.build_connection_dto(item))
+            new_dtos['connections'] = new_connections
         self.dto_factory.populate_secrets(secrets, new_dtos)
         return new_dtos
 
-    def sync_sources(self, airbyte_model, client, workspace, new_dtos):
-        for new_source in new_dtos['sources']:
+    def sync_sources_to_deployment(self, airbyte_model, client, workspace, dtos_from_config):
+        for new_source in dtos_from_config['sources']:
             if new_source.source_id is None:
                 response = client.create_source(new_source, workspace)
                 source_dto = self.dto_factory.build_source_dto(response.payload)
@@ -121,8 +123,8 @@ class Controller:
                 else:
                     print("Error: unable to modify source: " + new_source.source_id)
 
-    def sync_destinations(self, airbyte_model, client, workspace, new_dtos):
-        for new_destination in new_dtos['destinations']:
+    def sync_destinations_to_deployment(self, airbyte_model, client, workspace, dtos_from_config):
+        for new_destination in dtos_from_config['destinations']:
             if new_destination.destination_id is None:
                 response = client.create_destination(new_destination, workspace)
                 destination_dto = self.dto_factory.build_destination_dto(response.payload)
@@ -136,6 +138,39 @@ class Controller:
                     print("Modified destination: " + destination_dto.destination_id)
                 else:
                     print("Error: unable to modify destination: " + new_destination.destination_id)
+
+    def sync_connections_to_deployment(self, airbyte_model, client, workspace, dtos_from_config):
+        # populate sets of source and destination tags  # TODO: Move into a function
+        source_tags = set()
+        for source_dto in dtos_from_config['sources']:
+            for tag in source_dto.tags:
+                # if tag not null
+                source_tags.add(tag)
+        destination_tags = set()
+        for destination_dto in dtos_from_config['destinations']:
+            for tag in destination_dto.tags:
+                destination_tags.add(tag)
+
+        # unpack connections
+        for connection_entity in dtos_from_config['connections']:
+            ### problem v: how to know if connection entity is a group or an individual connection
+            if connection_entity:  # if entity is a group defined with in shorthand with tags
+                # create a connection from each source with a given source tag to each destination with a given destination tag
+                pass
+            else:  # entity is a single connection between a source and a destination
+                # if single connection exists in deployment
+                    # modify connection
+                # else new connection
+                    # create new connection
+                pass
+
+        # vvv scrap
+        for new_connection in dtos_from_config['connections']:
+            if new_connection.connection_id is None or new_connection.connection_id == '':
+                response = client.create_connection(new_connection, workspace)
+                pass
+            else:
+                pass  # TODO: Modify existing connections
 
     def wipe_sources(self, airbyte_model, client):
         """Wrapper for AirbyteConfigModel.wipe_sources"""

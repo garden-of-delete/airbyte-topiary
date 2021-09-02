@@ -19,15 +19,17 @@ TODO LIST:
 - (done) Validate workflow
 - (in progress) README.md
 - (done) License
-- Decorators
 - Type hinting
 - (in progress) Tests!
 - Post 0.1.0
     - CI (done)
+    - - Decorators
     - Linter
-    - Support for multiple workspaces
+    - Support for multiple workspaces in a single deployment
     - Update deployment workflow
     - Better management of multiple sets of credentials / better secrets management in general
+    - Sync job triggering for on a per-connection basis -> better support for cron / airflow orchestration
+    - Better validation and exception handling when reading in config as .yml
 """
 
 __author__ = "Robert Stolz"
@@ -54,27 +56,28 @@ def main(args):
 
     # sync workflow
     if args.mode == 'sync':
-        if utils.is_yaml(args.target):
+        if utils.is_yaml(args.target):  # deployment to yaml sync workflow
             airbyte_model.write_yaml(args.target)
             print("Output written to: " + args.target)
-        else:
+        else:  # yaml to deployment sync workflow
             yaml_config, secrets = controller.read_yaml_config(args)
-            new_dtos = controller.build_dtos_from_yaml_config(yaml_config, secrets)
+            dtos_from_config = controller.build_dtos_from_yaml_config(yaml_config, secrets)
             if args.backup_file:
                 airbyte_model.write_yaml(args.backup_file)
             if args.wipe:
                 controller.wipe_all(airbyte_model, client)
             print("Applying changes to deployment: " + client.airbyte_url)
             if args.sources or args.all:
-                controller.sync_sources(airbyte_model, client, workspace, new_dtos)
+                controller.sync_sourrces_to_deployment(airbyte_model, client, workspace, dtos_from_config)
                 if args.validate:
                     controller.validate_sources(airbyte_model, client)
             if args.destinations or args.all:
-                controller.sync_destinations(airbyte_model, client, workspace, new_dtos)
+                controller.sync_destinations_to_deployment(airbyte_model, client, workspace, dtos_from_config)
                 if args.validate:
                     controller.validate_destinations(airbyte_model, client)
             if args.connections or args.all:
-                pass  # TODO: implement controller.sync_connection
+                controller.sync_connections_to_deployment(airbyte_model, client, workspace, dtos_from_config)
+                # TODO: validate connections?
 
     # wipe workflow
     elif args.mode == 'wipe':

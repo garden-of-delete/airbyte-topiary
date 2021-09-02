@@ -60,7 +60,7 @@ def test_dto_factory__build_source_dto(dummy_airbyte_dto_factory, dummy_source_d
     assert t.connection_configuration == dummy_source_dto.connection_configuration
     assert t.source_name == dummy_source_dto.source_name
     assert t.name == dummy_source_dto.name
-    assert t.tag == dummy_source_dto.tag
+    assert t.tags == dummy_source_dto.tags
 
 
 def test_dto_factory__build_destination_dto(dummy_airbyte_dto_factory, dummy_destination_dict, dummy_destination_dto):
@@ -74,15 +74,16 @@ def test_dto_factory__build_destination_dto(dummy_airbyte_dto_factory, dummy_des
     assert t.connection_configuration == dummy_destination_dto.connection_configuration
     assert t.destination_name == dummy_destination_dto.destination_name
     assert t.name == dummy_destination_dto.name
-    assert t.tag == dummy_destination_dto.tag
+    assert t.tags == dummy_destination_dto.tags
 
 
-def test_dto_factory__build_connection_dto(dummy_airbyte_dto_factory, dummy_connection_dict, dummy_connection_dto):
+def test_dto_factory__build_connection_dto(dummy_airbyte_dto_factory, dummy_existing_connection_dict,
+                                           dummy_connection_dto):
     """
     Test AirbyteDtoFactory.build_connection_dto
     Ensures that the ConnectionDto being built by the AirbyteDtoFactory is faithful to the input dict
     """
-    t = dummy_airbyte_dto_factory.build_connection_dto(dummy_connection_dict)
+    t = dummy_airbyte_dto_factory.build_connection_dto(dummy_existing_connection_dict)
     assert t.connection_id == dummy_connection_dto.connection_id
     assert t.source_id == dummy_connection_dto.source_id
     assert t.destination_id == dummy_connection_dto.destination_id
