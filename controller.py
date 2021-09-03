@@ -102,7 +102,12 @@ class Controller:
         if 'connections' in yaml_config.keys():
             new_connections = []
             for item in yaml_config['connections']:
-                new_connections.append(self.dto_factory.build_connection_dto(item))
+                if 'groupName' in item.keys():
+                    connection_group = self.dto_factory.build_connection_dtos_from_group(item, new_sources, new_destinations)
+                    for connection in connection_group:
+                        new_connections.append(connection)
+                else:
+                    new_connections.append(self.dto_factory.build_connection_dto(item))
             new_dtos['connections'] = new_connections
         self.dto_factory.populate_secrets(secrets, new_dtos)
         return new_dtos
@@ -151,8 +156,9 @@ class Controller:
             for tag in destination_dto.tags:
                 destination_tags.add(tag)
 
-        # unpack connections
+        # unpack connections from
         for connection_entity in dtos_from_config['connections']:
+            pass
             ### problem v: how to know if connection entity is a group or an individual connection
             if connection_entity:  # if entity is a group defined with in shorthand with tags
                 # create a connection from each source with a given source tag to each destination with a given destination tag

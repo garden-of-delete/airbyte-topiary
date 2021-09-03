@@ -68,7 +68,7 @@ def main(args):
                 controller.wipe_all(airbyte_model, client)
             print("Applying changes to deployment: " + client.airbyte_url)
             if args.sources or args.all:
-                controller.sync_sourrces_to_deployment(airbyte_model, client, workspace, dtos_from_config)
+                controller.sync_sources_to_deployment(airbyte_model, client, workspace, dtos_from_config)
                 if args.validate:
                     controller.validate_sources(airbyte_model, client)
             if args.destinations or args.all:

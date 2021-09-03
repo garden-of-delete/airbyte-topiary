@@ -1,6 +1,7 @@
 class SourceDto:
-    """Data transfer object class for Source-type Airbyte abstractions"""
-
+    """
+    Data transfer object class for Source-type Airbyte abstractions
+    """
     def __init__(self):
         self.source_definition_id = None
         self.source_id = None
@@ -11,7 +12,9 @@ class SourceDto:
         self.tags = []
 
     def to_payload(self):
-        """sends this dto object to a dict formatted as a payload"""
+        """
+        sends this dto object to a dict formatted as a payload
+        """
         r = {}
         r['sourceDefinitionId'] = self.source_definition_id
         r['sourceId'] = self.source_id
@@ -23,8 +26,9 @@ class SourceDto:
 
 
 class DestinationDto:
-    """Data transfer object class for Destination-type Airbyte abstractions"""
-
+    """
+    Data transfer object class for Destination-type Airbyte abstractions
+    """
     def __init__(self):
         self.destination_definition_id = None
         self.destination_id = None
@@ -35,7 +39,9 @@ class DestinationDto:
         self.tags = []
 
     def to_payload(self):
-        """sends this dto object to a dict formatted as a payload"""
+        """
+        sends this dto object to a dict formatted as a payload
+        """
         r = {}
         r['destinationDefinitionId'] = self.destination_definition_id
         r['destinationId'] = self.destination_id
@@ -47,17 +53,18 @@ class DestinationDto:
 
 
 class ConnectionDto:
-    """Data transfer object class for Connection-type Airbyte abstractions"""
-
+    """
+    Data transfer object class for Connection-type Airbyte abstractions
+    """
     def __init__(self):
         self.connection_id = None
-        self.name = None
-        self.prefix = None
+        self.name = 'default'
+        self.prefix = ''
         self.source_id = None
         self.destination_id = None
         self.sync_catalog = {}  # sync_catalog['streams'] is a list of dicts {stream:, config:}
         self.schedule = {}
-        self.status = None
+        self.status = 'active'
 
     def to_payload(self):
         r = {}
@@ -73,7 +80,9 @@ class ConnectionDto:
 
 
 class StreamDto:
-    """Data transfer object class for the stream, belongs to the connection abstraction"""
+    """
+    Data transfer object class for the stream, belongs to the connection abstraction
+    """
 
     def __init__(self):
         self.name = None
@@ -86,7 +95,9 @@ class StreamDto:
 
 
 class StreamConfigDto:
-    """Data transfer object class for the stream configuration, belongs to the connection abstraction"""
+    """
+    Data transfer object class for the stream configuration, belongs to the connection abstraction
+    """
 
     def __init__(self):
         self.sync_mode = None
@@ -98,14 +109,16 @@ class StreamConfigDto:
 
 
 class WorkspaceDto:
-    """Data transfer object class for Workspace-type Airbyte abstractions"""
+    """
+    Data transfer object class for Workspace-type Airbyte abstractions
+    """
 
     def __init__(self):
         pass
 
 class AirbyteDtoFactory:
     """
-    Builds data transfer objects, each representing an abstraction inside the Airbyte architecture
+    Builds data transfer objects, each modeling an abstraction inside Airbyte
     """
     def __init__(self, source_definitions, destination_definitions):
         self.source_definitions = source_definitions
@@ -180,11 +193,32 @@ class AirbyteDtoFactory:
             r.destination_id = connection['destinationId']
         if 'name' in connection:
             r.name = connection['name']  # or groupName
-        else:
-            r.name = connection['groupName']
         if 'syncCatalog' in connection:
             r.sync_catalog = connection['syncCatalog']
         r.schedule = connection['schedule']
         r.status = connection['status']
         # TODO: check for validity?
         return r
+
+    def build_connection_dtos_from_group(self, connection_group, new_sources, new_destinations):
+        """
+        Given a connection group defined in yaml, this function returns a collection of ConnectionDto objects
+        """
+        connections = []
+        for source_dto in new_sources:
+            for destination_dto in new_destinations:
+                if any(item in source_dto.tags for item in destination_dto.tags):
+                    #create a new connection dto
+                    connection = ConnectionDto()
+                    if source_dto.source_id:
+                        connection.source_id = source_dto.source_id
+                    if destination_dto.destination_id:
+                        connection.destination_id = destination_dto.destination_id 
+                    connection.name = connection_group['groupName']
+                    connection.schedule = connection_group['schedule']
+                    if 'status' in connection_group:
+                        connection.status = connection_group['status']
+                    if 'syncCatalog' in connection_group:
+                        connection.sync_catalog = connection_group['syncCatalog']
+                    connections.append(connection)
+        return connections
