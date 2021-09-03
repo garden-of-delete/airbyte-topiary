@@ -145,38 +145,34 @@ class Controller:
                     print("Error: unable to modify destination: " + new_destination.destination_id)
 
     def sync_connections_to_deployment(self, airbyte_model, client, workspace, dtos_from_config):
-        # populate sets of source and destination tags  # TODO: Move into a function
-        source_tags = set()
-        for source_dto in dtos_from_config['sources']:
-            for tag in source_dto.tags:
-                # if tag not null
-                source_tags.add(tag)
-        destination_tags = set()
-        for destination_dto in dtos_from_config['destinations']:
-            for tag in destination_dto.tags:
-                destination_tags.add(tag)
-
-        # unpack connections from
-        for connection_entity in dtos_from_config['connections']:
-            pass
-            ### problem v: how to know if connection entity is a group or an individual connection
-            if connection_entity:  # if entity is a group defined with in shorthand with tags
-                # create a connection from each source with a given source tag to each destination with a given destination tag
-                pass
-            else:  # entity is a single connection between a source and a destination
-                # if single connection exists in deployment
-                    # modify connection
-                # else new connection
-                    # create new connection
-                pass
-
-        # vvv scrap
-        for new_connection in dtos_from_config['connections']:
-            if new_connection.connection_id is None or new_connection.connection_id == '':
+        """
+        Applies a collection of connectionDtos (or connection groups, defined as dicts), to an airbyte deployment
+        """
+        # resolve any connection groups defined in .yml into a collection of connections
+        connection_dtos = []
+        for connection_entity in dtos_from_config['connections']:            
+            if 'groupName' in connection_entity:  # if entity is a group defined with in shorthand with tags
+                c = self.dto_factory.build_connection_dtos_from_group(connection_entity, dtos_from_config['sources'],
+                                                                      dtos_from_config['destinations'])
+                for connection_dto in c:
+                    connection_dtos.append(connection_dto)
+            else:  # else connection_entity is a connection, not a connection group
+                connection_dtos.append(connection_entity)
+        # crete or modify each connection defined in yml
+        for new_connection in connection_dtos:
+            if new_connection.connection_id is None:
                 response = client.create_connection(new_connection, workspace)
-                pass
-            else:
-                pass  # TODO: Modify existing connections
+                connection_dto = self.dto_factory.build_connection_dto(response.payload)  # TODO: test
+                print("Created connection: " + connection_dto.connection_id)
+                airbyte_model.connections[connection_dto.connection_id] = connection_dto
+            else:  # modify existing connection
+                response = client.update_connection(new_connection)
+                if response.ok:
+                    connection_dto = self.dto_factory.build_connection_dto(response.payload)
+                    airbyte_model.connections[connection_dto.connection_id] = connection_dto
+                    print("Modified connection: " + connection_dto.connection_id)
+                else:
+                    print("Error: unable to modify connection: " + new_connection.connection_id)
 
     def wipe_sources(self, airbyte_model, client):
         """Wrapper for AirbyteConfigModel.wipe_sources"""
