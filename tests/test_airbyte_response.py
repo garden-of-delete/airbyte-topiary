@@ -4,21 +4,20 @@ from airbyte_client import AirbyteResponse
 from airbyte_client import RESPONSE_CODES
 
 
-def mock_json():
+def json():
     return {
         'attribute': 'value'
     }
 
-
-def mock_raise_error():
+def raise_error():
     raise HTTPError
 
 
-def test_recognized_response_code(monkeypatch):
+def test_recognized_response_code():
     mock_response = requests.Response()
-    monkeypatch.setattr(mock_response, 'status_code', 200)
-    monkeypatch.setattr(mock_response, 'json', mock_json)
-    monkeypatch.setattr(mock_response, 'raise_for_status', lambda: True)
+    mock_response.status_code = 200
+    mock_response.json = json()
+    mock_response.raise_for_status = lambda: True
     response = AirbyteResponse(mock_response)
 
     assert response.message == RESPONSE_CODES[200]
@@ -26,11 +25,11 @@ def test_recognized_response_code(monkeypatch):
     assert response.ok
 
 
-def test_unrecognized_response_code(monkeypatch):
+def test_unrecognized_response_code():
     mock_response = requests.Response()
-    monkeypatch.setattr(mock_response, 'status_code', 500)
-    monkeypatch.setattr(mock_response, 'json', mock_json)
-    monkeypatch.setattr(mock_response, 'raise_for_status', mock_raise_error)
+    mock_response.status_code = 200
+    mock_response.json = json()
+    mock_response.raise_for_status = raise_error
     response = AirbyteResponse(mock_response)
 
     assert response.message == "Unrecognized response code"
