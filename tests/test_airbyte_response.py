@@ -9,29 +9,30 @@ def json():
         'attribute': 'value'
     }
 
+
 def raise_error():
     raise HTTPError
 
 
-def test_recognized_response_code():
-    mock_response = requests.Response()
-    mock_response.status_code = 200
-    mock_response.json = json()
-    mock_response.raise_for_status = lambda: True
-    response = AirbyteResponse(mock_response)
+def test_recognized_response_code(monkeypatch):
+    response = requests.Response()
+    response.status_code = 200
+    response.json = json
+    response.raise_for_status = lambda: True
+    airbyte_response = AirbyteResponse(response)
 
-    assert response.message == RESPONSE_CODES[200]
-    assert response.payload['attribute'] == 'value'
-    assert response.ok
+    assert airbyte_response.message == RESPONSE_CODES[200]
+    assert airbyte_response.payload['attribute'] == 'value'
+    assert airbyte_response.ok
 
 
 def test_unrecognized_response_code():
-    mock_response = requests.Response()
-    mock_response.status_code = 200
-    mock_response.json = json()
-    mock_response.raise_for_status = raise_error
-    response = AirbyteResponse(mock_response)
+    response = requests.Response()
+    response.status_code = 500
+    response.json = json
+    response.raise_for_status = raise_error
+    airbyte_response = AirbyteResponse(response)
 
-    assert response.message == "Unrecognized response code"
-    assert response.payload['attribute'] == 'value'
-    assert not response.ok
+    assert airbyte_response.message == "Unrecognized response code"
+    assert airbyte_response.payload['attribute'] == 'value'
+    assert not airbyte_response.ok
