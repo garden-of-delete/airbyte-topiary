@@ -79,6 +79,25 @@ class ConnectionDto:
         return r
 
 
+class ConnectionGroupDto:
+    """
+    Data transfer object class for connection groups, each one representing a set of connections
+    Note, Airbyte does not have this abstraction internally
+
+    ConnectionGroupDto also does not have a to_payload method, as it will never need to be written to .yml,
+    or interact directly with the client, only read.
+    """
+
+    def __init__(self):
+        self.group_name = None
+        self.prefix = ''
+        self.source_tags = None
+        self.destination_tags = None
+        self.sync_catalog = {}  # sync_catalog['streams'] is a list of dicts {stream:, config:}
+        self.schedule = {}
+        self.status = 'active'
+
+
 class StreamDto:
     """
     Data transfer object class for the stream, belongs to the connection abstraction
@@ -115,6 +134,7 @@ class WorkspaceDto:
 
     def __init__(self):
         pass
+
 
 class AirbyteDtoFactory:
     """
@@ -159,10 +179,12 @@ class AirbyteDtoFactory:
             r.workspace_id = source['workspaceId']
         if 'tags' in source:
             r.tags = source['tags']
-        # TODO: check for validity?
         return r
 
     def build_destination_dto(self, destination):
+        """
+        Builds a DestinationDto object from a dict representing a source
+        """
         r = DestinationDto()
         r.connection_configuration = destination['connectionConfiguration']
         r.destination_name = destination['destinationName']
@@ -179,12 +201,15 @@ class AirbyteDtoFactory:
             r.workspace_id = destination['workspaceId']
         if 'tags' in destination:
             r.tags = destination['tags']
-        # TODO: check for validity?
         return r
 
     def build_connection_dto(self, connection):
+        """
+        Builds a ConnectionDto from a dict representing a connection
+        """
         r = ConnectionDto()
-        r.prefix = connection['prefix']
+        if 'prefix' in connection:
+            r.prefix = connection['prefix']
         if 'connectionId' in connection:  # connection is already defined in an Airbyte deployment
             r.connection_id = connection['connectionId']
         if 'sourceId' in connection:
@@ -192,33 +217,24 @@ class AirbyteDtoFactory:
         if 'destinationId' in connection:
             r.destination_id = connection['destinationId']
         if 'name' in connection:
-            r.name = connection['name']  # or groupName
+            r.name = connection['name']
         if 'syncCatalog' in connection:
             r.sync_catalog = connection['syncCatalog']
         r.schedule = connection['schedule']
         r.status = connection['status']
-        # TODO: check for validity?
         return r
-
-    def build_connection_dtos_from_group(self, connection_group, new_sources, new_destinations):
+    
+    def build_connection_group_dto(self, connection_group):
         """
-        Given a connection group defined in yaml, this function returns a collection of ConnectionDto objects
+        Builds a ConnectionGroupDto from a dict representing a connection_group
+        Note: unlike the other DTO classes, ConnectionGroupDto doesn't represent an abstraction inside Airbyte
         """
-        connections = []
-        for source_dto in new_sources:
-            for destination_dto in new_destinations:
-                if any(item in source_dto.tags for item in destination_dto.tags):
-                    #create a new connection dto
-                    connection = ConnectionDto()
-                    if source_dto.source_id:
-                        connection.source_id = source_dto.source_id
-                    if destination_dto.destination_id:
-                        connection.destination_id = destination_dto.destination_id 
-                    connection.name = connection_group['groupName']
-                    connection.schedule = connection_group['schedule']
-                    if 'status' in connection_group:
-                        connection.status = connection_group['status']
-                    if 'syncCatalog' in connection_group:
-                        connection.sync_catalog = connection_group['syncCatalog']
-                    connections.append(connection)
-        return connections
+        r = ConnectionGroupDto()
+        r.group_name = connection_group['groupName']
+        if 'syncCatalog' in connection_group:
+            r.sync_catalog = connection_group['syncCatalog']
+        r.schedule = connection_group['schedule']
+        r.status = connection_group['status']
+        r.source_tags = connection_group['sourceTags']
+        r.destination_tags = connection_group['destinationTags']
+        return r

@@ -23,7 +23,7 @@ TODO LIST:
 - (in progress) Tests!
 - Post 0.1.0
     - CI (done)
-    - - Decorators
+    - Decorators
     - Linter
     - Support for multiple workspaces in a single deployment
     - Update deployment workflow
@@ -77,7 +77,8 @@ def main(args):
                     controller.validate_destinations(airbyte_model, client)
             if args.connections or args.all:
                 controller.sync_connections_to_deployment(airbyte_model, client, workspace, dtos_from_config)
-                # TODO: validate connections?
+                if args.validate:
+                    controller.validate_connections(airbyte_model, client)
 
     # wipe workflow
     elif args.mode == 'wipe':

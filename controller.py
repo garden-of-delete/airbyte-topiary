@@ -101,14 +101,16 @@ class Controller:
             new_dtos['destinations'] = new_destinations
         if 'connections' in yaml_config.keys():
             new_connections = []
-            for item in yaml_config['connections']:
-                if 'groupName' in item.keys():
-                    connection_group = self.dto_factory.build_connection_dtos_from_group(item, new_sources, new_destinations)
-                    for connection in connection_group:
-                        new_connections.append(connection)
-                else:
-                    new_connections.append(self.dto_factory.build_connection_dto(item))
-            new_dtos['connections'] = new_connections
+            new_connection_groups = []
+            for connection_entity in yaml_config['connections']:
+                if 'groupName' in connection_entity:  # if entity is a group defined with in shorthand with tags
+                    new_connection_groups.append(self.dto_factory.build_connection_group_dto(connection_entity))
+                else:  # else connection_entity is a connection, not a connection group
+                    new_connections.append(self.dto_factory.build_connection_dto(connection_entity))
+            if len(new_connections) > 0:
+                new_dtos['connections'] = new_connections
+            if len(new_connection_groups) > 0:
+                new_dtos['connectionGroups'] = new_connection_groups
         self.dto_factory.populate_secrets(secrets, new_dtos)
         return new_dtos
 
@@ -146,21 +148,11 @@ class Controller:
 
     def sync_connections_to_deployment(self, airbyte_model, client, workspace, dtos_from_config):
         """
-        Applies a collection of connectionDtos (or connection groups, defined as dicts), to an airbyte deployment
+        Applies a collection of connectionDtos and connectionGroupDtos, to an airbyte deployment
         """
-        # resolve any connection groups defined in .yml into a collection of connections
-        connection_dtos = []
-        for connection_entity in dtos_from_config['connections']:            
-            if 'groupName' in connection_entity:  # if entity is a group defined with in shorthand with tags
-                c = self.dto_factory.build_connection_dtos_from_group(connection_entity, dtos_from_config['sources'],
-                                                                      dtos_from_config['destinations'])
-                for connection_dto in c:
-                    connection_dtos.append(connection_dto)
-            else:  # else connection_entity is a connection, not a connection group
-                connection_dtos.append(connection_entity)
-        # crete or modify each connection defined in yml
-        for new_connection in connection_dtos:
-            if new_connection.connection_id is None:
+        # create or modify each connection defined in yml
+        for new_connection in dtos_from_config['connections']:
+            if new_connection.connection_id is None:  # create new connection
                 response = client.create_connection(new_connection, workspace)
                 connection_dto = self.dto_factory.build_connection_dto(response.payload)  # TODO: test
                 print("Created connection: " + connection_dto.connection_id)
@@ -213,4 +205,4 @@ class Controller:
         """Validates all sources, destinations, and connections in the specified AirbyteConfigModel"""
         self.validate_sources(airbyte_model, client)
         self.validate_destinations(airbyte_model, client)
-        #self.validate_connections(airbyte_model, client)
+        #self.validate_connections(airbyte_model, client)  # TODO: turn on
