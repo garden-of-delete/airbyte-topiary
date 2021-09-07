@@ -150,10 +150,13 @@ class AirbyteClient:
         r = requests.post(route, json=payload)
         return AirbyteResponse(r)
 
-    def create_connection(self, source_dto, destination_dto):
+    def create_connection(self, connection_dto, source_dto):
         """Route: POST /v1/connections/create"""
         route = self.airbyte_url + 'api/v1/connections/create'
-        source_schema = self.discover_source_schema(source_dto)  # TODO: test
+        if connection_dto.sync_catalog:
+            pass #
+        else:
+            source_schema = self.discover_source_schema(source_dto)  # TODO: test
         payload = {}
 
     def delete_connection(self):

@@ -85,7 +85,8 @@ class ConnectionGroupDto:
     Note, Airbyte does not have this abstraction internally
 
     ConnectionGroupDto also does not have a to_payload method, as it will never need to be written to .yml,
-    or interact directly with the client, only read.
+    or interact directly with the client, only read. Instead, to_incomplete_connection_dict sends the
+    relevant info for making a new ConnectionDto to a dict.
     """
 
     def __init__(self):
@@ -96,6 +97,19 @@ class ConnectionGroupDto:
         self.sync_catalog = {}  # sync_catalog['streams'] is a list of dicts {stream:, config:}
         self.schedule = {}
         self.status = 'active'
+
+    def to_incomplete_connection_dict(self):
+        """
+        This function returns what AirbyteDtoFactory.build_connection_dto craves
+        """
+        r = {
+            'name': self.group_name,
+            'prefix': self.prefix,
+            'syncCatalog': self.sync_catalog,
+            'schedule': self.schedule,
+            'status': self.status
+        }
+        return r
 
 
 class StreamDto:
