@@ -24,11 +24,19 @@ class AirbyteClient:
     def __init__(self, url):
         self.airbyte_url = url.strip('/') + '/'  # TODO: a little awk
 
+    def get(self, relative_url) -> AirbyteResponse:
+        route = self.airbyte_url + relative_url
+        r = requests.get(route)
+        return AirbyteResponse(r)
+
+    def post(self, relative_url, payload) -> AirbyteResponse:
+        route = self.airbyte_url + relative_url
+        r = requests.post(route, payload)
+        return AirbyteResponse(r)
+
     def get_workspace_by_slug(self, slug='default'):
         """Route: POST /v1/workspaces/get_by_slug"""
-        route = self.airbyte_url + 'api/v1/workspaces/get_by_slug'
-        r = requests.post(route, json={"slug": slug})
-        return AirbyteResponse(r)
+        return self.post('api/v1/workspaces/get_by_slug', dict(slug=slug))
 
     def get_workspace_by_id(self, workspace_uuid):
         """Route: POST /v1/workspaces/get"""
@@ -37,16 +45,20 @@ class AirbyteClient:
         r = requests.post(route, json={"workspace_id": uuid})
         return AirbyteResponse(r)
 
+    def list_workspaces(self):
+        """Route: /v1/workspaces/list"""
+        return self.post('api/v1/workspaces/list', payload={})
+
     def get_source_definitions(self):
         """Route: /v1/source_definitions/list"""
         route = self.airbyte_url + 'api/v1/source_definitions/list'
         r = requests.post(route)
         return AirbyteResponse(r)
 
-    def get_source_definition_spec(self, source_id):
+    def get_source_definition_connection_spec(self, source_definition_id):
         """Route: /v1/source_definition_specifications/get"""
         route = self.airbyte_url + 'api/v1/source_definition_specifications/get'
-        r = requests.post(route, json={'sourceDefinitionId': source_id})
+        r = requests.post(route, json={'sourceDefinitionId': source_definition_id})
         return AirbyteResponse(r)
 
     def get_destination_definitions(self):
@@ -64,9 +76,10 @@ class AirbyteClient:
             print(source_dto.source_id + ': Unable to validate, source not found')
         return AirbyteResponse(r)
 
-    def create_source(self, source_dto, workspace):
+    def create_source(self, source_dto, workspace) -> AirbyteResponse:
         """ Route: POST /v1/sources/create"""
         route = self.airbyte_url + 'api/v1/sources/create'
+        connection_spec = self.get_source_definition_connection_spec(source_dto.source_definition_id)
         payload = {'sourceDefinitionId': source_dto.source_definition_id,
                    'workspaceId': workspace['workspaceId'],
                    'connectionConfiguration': source_dto.connection_configuration,
@@ -153,11 +166,20 @@ class AirbyteClient:
     def create_connection(self, connection_dto, source_dto):
         """Route: POST /v1/connections/create"""
         route = self.airbyte_url + 'api/v1/connections/create'
-        if connection_dto.sync_catalog:
-            pass #
-        else:
+        if not connection_dto.sync_catalog:
             source_schema = self.discover_source_schema(source_dto)  # TODO: test
-        payload = {}
+            connection_dto.sync_catalog = source_schema
+        payload = {
+            'name': connection_dto.name,
+            'prefix': connection_dto.prefix,
+            'sourceId': connection_dto.source_id,
+            'destinationId': connection_dto.destination_id,
+            'syncCatalog': connection_dto.sync_catalog,
+        }
+        if connection_dto.schedule:
+            payload['syncCatalog']['schedule'] = connection_dto.schedule
+        r = requests.post(route, json=payload)
+        return AirbyteResponse(r)
 
     def delete_connection(self):
         """Route: POST /v1/connections/delete"""

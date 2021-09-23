@@ -172,13 +172,17 @@ class AirbyteDtoFactory:
                 if destination.destination_name in secrets['destinations']:
                     if 'password' in destination.connection_configuration:
                         destination.connection_configuration['password'] = secrets['destinations'][destination.destination_name]['password']
+                    elif 'credentials_json' in destination.connection_configuration:
+                        destination.connection_configuration['credentials_json'] = \
+                        secrets['destinations'][destination.destination_name]['credentials_json']
 
     def build_source_dto(self, source: dict) -> SourceDto:
         """
         Builds a SourceDto object from a dict representing a source
         """
         r = SourceDto()
-        r.connection_configuration = source['connectionConfiguration']
+        if 'connectionConfiguration' in source:
+            r.connection_configuration = source['connectionConfiguration']
         r.name = source['name']
         r.source_name = source['sourceName']
         if 'sourceDefinitionId' in source:
@@ -187,6 +191,7 @@ class AirbyteDtoFactory:
             for definition in self.source_definitions['sourceDefinitions']:
                 if r.source_name == definition['name']:
                     r.source_definition_id = definition['sourceDefinitionId']
+            # TODO: handle exception where no sourceDefinitionId matches the provided source name
         if 'sourceId' in source:
             r.source_id = source['sourceId']
         if 'workspaceId' in source:

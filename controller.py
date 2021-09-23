@@ -5,7 +5,7 @@ import utils
 import yaml
 
 class Controller:
-    """Communicates with the user. Provides methods to execute the subtasks for each workflow."""
+    """Communicates with the user. Provides methods to execute the tasks for each workflow."""
     def __init__(self):
         self.dto_factory = None
 
@@ -77,7 +77,7 @@ class Controller:
         if args.workspace_slug:
             workspace = client.get_workspace_by_slug(args.workspace_slug).payload
         else:
-            workspace = client.get_workspace_by_slug().payload
+            workspace = client.list_workspaces().payload['workspaces'][0]  # TODO: support for multiple workspaces
         return workspace
 
     def build_dtos_from_yaml_config(self, yaml_config, secrets):
@@ -118,9 +118,12 @@ class Controller:
         for new_source in dtos_from_config['sources']:
             if new_source.source_id is None:
                 response = client.create_source(new_source, workspace)
-                source_dto = self.dto_factory.build_source_dto(response.payload)
-                print("Created source: " + source_dto.source_id)
-                airbyte_model.sources[source_dto.source_id] = source_dto
+                if response.ok:
+                    source_dto = self.dto_factory.build_source_dto(response.payload)
+                    print("Created source: " + source_dto.source_id)
+                    airbyte_model.sources[source_dto.source_id] = source_dto
+                else:
+                    print("Error creating connector " + new_source.name + ": " + response.message)
             else:
                 response = client.update_source(new_source)
                 if response.ok:
@@ -148,7 +151,8 @@ class Controller:
 
     def sync_connections_to_deployment(self, airbyte_model, client, workspace, dtos_from_config):
         """
-        Applies a collection of connectionDtos and connectionGroupDtos, to an airbyte deployment
+        Applies a collection of connectionDtos and/or connectionGroupDtos, to an airbyte deployment
+        TODO: This function kind of sucks. Could use some rethinking / refactoring
         """
         # create or modify each connection defined in yml
         if 'connections' in dtos_from_config:
@@ -167,17 +171,17 @@ class Controller:
                     else:
                         print("Error: unable to modify connection: " + new_connection.connection_id)
         if 'connectionGroups' in dtos_from_config:
-            for source in airbyte_model.sources:
-                for destination in airbyte_model.destinations:
+            for source in airbyte_model.sources.values():
+                for destination in airbyte_model.destinations.values():
                     for connection_group in dtos_from_config['connectionGroups']:
-                        # vvv if connection_group includes a connection between source and destination
-                        if not set(connection_group['sourceTags']).isdisjoint(set(source.tags)) and \
-                                not set(connection_group['destinationTags']).isdisjoint(set(destination.tags)):
+                        # if connection_group includes a connection between source and destination
+                        if not set(connection_group.source_tags).isdisjoint(set(source.tags)) and \
+                                not set(connection_group.destination_tags).isdisjoint(set(destination.tags)):
                             # build a connectionDto for the connection
                             new_connection_dict = connection_group.to_incomplete_connection_dict()
                             new_connection_dict['sourceId'] = source.source_id
                             new_connection_dict['destinationId'] = destination.destination_id
-                            new_connection = self.dto_factory.build_connection_dto()
+                            new_connection = self.dto_factory.build_connection_dto(new_connection_dict)
                             # create the connection
                             response = client.create_connection(new_connection, workspace)
                             connection_dto = self.dto_factory.build_connection_dto(response.payload)  # TODO: test
