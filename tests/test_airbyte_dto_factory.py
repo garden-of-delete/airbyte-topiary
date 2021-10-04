@@ -93,6 +93,21 @@ def test_dto_factory__build_connection_dto(dummy_airbyte_dto_factory, dummy_exis
     assert t.status == dummy_connection_dto.status
     assert t.sync_catalog == dummy_connection_dto.sync_catalog
 
+def test_dto_factory__build_connection_group_dto(dummy_airbyte_dto_factory, dummy_connection_group_dict,
+                                           dummy_connection_group_dto):
+    """
+    Test AirbyteDtoFactory.build_connection_group_dto
+    Experimental
+    """
+    t = dummy_airbyte_dto_factory.build_connection_group_dto(dummy_connection_group_dict)
+    assert t.group_name == dummy_connection_group_dto.group_name
+    assert t.source_tags == dummy_connection_group_dto.source_tags
+    assert t.destination_tags == dummy_connection_group_dto.destination_tags
+    assert t.prefix == dummy_connection_group_dto.prefix
+    assert t.schedule == dummy_connection_group_dto.schedule
+    assert t.status == dummy_connection_group_dto.status
+    assert t.sync_catalog == dummy_connection_group_dto.sync_catalog
+
 
 def test_dto_factory__populate_secrets(dummy_airbyte_dto_factory, dummy_secrets_dict, dummy_source_dto,
                                        dummy_destination_dto):

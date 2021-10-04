@@ -256,4 +256,5 @@ class AirbyteDtoFactory:
         r.status = connection_group['status']
         r.source_tags = connection_group['sourceTags']
         r.destination_tags = connection_group['destinationTags']
+        r.prefix = connection_group['prefix']
         return r

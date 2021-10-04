@@ -170,7 +170,7 @@ class Controller:
                         print("Modified connection: " + connection_dto.connection_id)
                     else:
                         print("Error: unable to modify connection: " + new_connection.connection_id)
-        if 'connectionGroups' in dtos_from_config:
+        if 'connectionGroups' in dtos_from_config:  # TODO: this is gross. refactor.
             for source in airbyte_model.sources.values():
                 for destination in airbyte_model.destinations.values():
                     for connection_group in dtos_from_config['connectionGroups']:
