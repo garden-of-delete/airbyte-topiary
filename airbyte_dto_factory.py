@@ -61,7 +61,9 @@ class ConnectionDto:
         self.name = 'default'
         self.prefix = ''
         self.source_id = None
+        self.source_name = None
         self.destination_id = None
+        self.destination_name = None
         self.sync_catalog = {}  # sync_catalog['streams'] is a list of dicts {stream:, config:}
         self.schedule = {}
         self.status = 'active'
@@ -229,12 +231,16 @@ class AirbyteDtoFactory:
         r = ConnectionDto()
         if 'prefix' in connection:
             r.prefix = connection['prefix']
-        if 'connectionId' in connection:  # connection is already defined in an Airbyte deployment
+        if 'connectionId' in connection:  # => connection is already defined in an Airbyte deployment
             r.connection_id = connection['connectionId']
         if 'sourceId' in connection:
             r.source_id = connection['sourceId']
+        if 'sourceName' in connection:
+            r.source_name = connection['sourceName']
         if 'destinationId' in connection:
             r.destination_id = connection['destinationId']
+        if 'destinationName' in connection:
+            r.destination_name = connection['destinationName']
         if 'name' in connection:
             r.name = connection['name']
         if 'syncCatalog' in connection:

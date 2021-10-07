@@ -152,17 +152,28 @@ class Controller:
     def sync_connections_to_deployment(self, airbyte_model, client, workspace, dtos_from_config):
         """
         Applies a collection of connectionDtos and/or connectionGroupDtos, to an airbyte deployment
-        TODO: This function kind of sucks. Could use some rethinking / refactoring
         """
         # create or modify each connection defined in yml
         if 'connections' in dtos_from_config:
             for new_connection in dtos_from_config['connections']:
                 if new_connection.connection_id is None:  # create new connection
+                    # if source_id is none, resolve source_id from source_name
+                    if new_connection.source_id is None:
+                        new_connection.source_id = next(i for i in airbyte_model.connections.val if
+                                                        i.source_name == new_connection.source_name)
+                    pass
+                    # check validity of source?
+
+                    # if destination_id is none, resolve destination_id from destination_name
+
+                    # if sync_catalog is none, generate a generic sync catalog from the source
+
+
                     response = client.create_connection(new_connection, workspace)
                     connection_dto = self.dto_factory.build_connection_dto(response.payload)  # TODO: test
                     print("Created connection: " + connection_dto.connection_id)
                     airbyte_model.connections[connection_dto.connection_id] = connection_dto
-                else:  # modify existing connection
+                else:  # modify existing connection  # TODO: test modify existing connection
                     response = client.update_connection(new_connection)
                     if response.ok:
                         connection_dto = self.dto_factory.build_connection_dto(response.payload)
@@ -170,32 +181,6 @@ class Controller:
                         print("Modified connection: " + connection_dto.connection_id)
                     else:
                         print("Error: unable to modify connection: " + new_connection.connection_id)
-        if 'connectionGroups' in dtos_from_config:  # TODO: this is gross. refactor.
-            for source in airbyte_model.sources.values():
-                for destination in airbyte_model.destinations.values():
-                    for connection_group in dtos_from_config['connectionGroups']:
-                        # if connection_group includes a connection between source and destination
-                        if not set(connection_group.source_tags).isdisjoint(set(source.tags)) and \
-                                not set(connection_group.destination_tags).isdisjoint(set(destination.tags)):
-                            # build a connectionDto for the connection
-                            new_connection_dict = connection_group.to_incomplete_connection_dict()
-                            new_connection_dict['sourceId'] = source.source_id
-                            new_connection_dict['destinationId'] = destination.destination_id
-                            new_connection = self.dto_factory.build_connection_dto(new_connection_dict)
-                            # create the connection
-                            response = client.create_connection(new_connection, workspace)
-                            connection_dto = self.dto_factory.build_connection_dto(response.payload)  # TODO: test
-                            print("Created connection: " + connection_dto.connection_id)
-                            airbyte_model.connections[connection_dto.connection_id] = connection_dto
-
-            for new_connection_group in dtos_from_config['connectionGroups']:
-                #
-                if new_connection.connection_id is None:  # create new connection
-                    response = client.create_connection(new_connection, workspace)
-                    connection_dto = self.dto_factory.build_connection_dto(response.payload)  # TODO: test
-                    print("Created connection: " + connection_dto.connection_id)
-                    airbyte_model.connections[connection_dto.connection_id] = connection_dto
-
 
 
     def wipe_sources(self, airbyte_model, client):

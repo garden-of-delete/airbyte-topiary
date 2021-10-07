@@ -77,10 +77,10 @@ def test_dto_factory__build_destination_dto(dummy_airbyte_dto_factory, dummy_des
     assert t.tags == dummy_destination_dto.tags
 
 
-def test_dto_factory__build_connection_dto(dummy_airbyte_dto_factory, dummy_existing_connection_dict,
+def test_dto_factory__build_connection_dto__existing_connection(dummy_airbyte_dto_factory, dummy_existing_connection_dict,
                                            dummy_connection_dto):
     """
-    Test AirbyteDtoFactory.build_connection_dto
+    Test AirbyteDtoFactory.build_connection_dto using a dict for an existing connection
     Ensures that the ConnectionDto being built by the AirbyteDtoFactory is faithful to the input dict
     """
     t = dummy_airbyte_dto_factory.build_connection_dto(dummy_existing_connection_dict)
@@ -92,6 +92,21 @@ def test_dto_factory__build_connection_dto(dummy_airbyte_dto_factory, dummy_exis
     assert t.schedule == dummy_connection_dto.schedule
     assert t.status == dummy_connection_dto.status
     assert t.sync_catalog == dummy_connection_dto.sync_catalog
+
+
+def test_dto_factory__build_connection_dto__new_connection(dummy_airbyte_dto_factory, dummy_new_connection_dict,
+                                           dummy_connection_dto):
+    """
+    Test AirbyteDtoFactory.build_connection_dto using a dict for an existing connection
+    Ensures that the ConnectionDto being built by the AirbyteDtoFactory is faithful to the input dict
+    """
+    t = dummy_airbyte_dto_factory.build_connection_dto(dummy_new_connection_dict)
+    assert t.source_name == dummy_connection_dto.source_name
+    assert t.destination_name == dummy_connection_dto.destination_name
+    assert t.name == dummy_connection_dto.name
+    assert t.prefix == dummy_connection_dto.prefix
+    assert t.schedule == dummy_connection_dto.schedule
+    assert t.status == dummy_connection_dto.status
 
 def test_dto_factory__build_connection_group_dto(dummy_airbyte_dto_factory, dummy_connection_group_dict,
                                            dummy_connection_group_dto):
