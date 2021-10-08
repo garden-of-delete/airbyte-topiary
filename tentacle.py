@@ -1,35 +1,6 @@
 #!/usr/bin/env python3
 """
 This is a simple, open-source tool designed to help manage Airbyte deployments at scale through via the API.
-
-TODO LIST:
-- (done) Implement "check" routes for source and destination validation
-- (done) Drop description and code supporting the deployment to deployment use case
-- (in progress) Implement the connection routes, dto class, and all associated functions
-- (done) Restructure main method as a proper controller. All feedback to user should come from controller
-- Finalize the yaml to deployment workflow
-    - (done) Add print statements to create_source and create_destination
-    - (done) Add ability for user to override workspace slug
-    - (done) Address modification of existing sources and destinations
-    - (done) Clarify all arg processor functions related to this workflow
-    - (in progress) implement the --backup option
-    - (stretch): modification of existing connections
-- (done) Deployment to yaml workflow
-- (done) Wipe target workflow
-- (done) Validate workflow
-- (in progress) README.md
-- (done) License
-- Type hinting
-- (in progress) Tests!
-- Post 0.1.0
-    - CI (done)
-    - Decorators
-    - Linter
-    - Support for multiple workspaces in a single deployment
-    - Update deployment workflow
-    - Better management of multiple sets of credentials / better secrets management in general
-    - Sync job triggering for on a per-connection basis -> better support for cron / airflow orchestration
-    - Better validation and exception handling when reading in config as .yml
 """
 
 __author__ = "Robert Stolz"
@@ -65,7 +36,7 @@ def main(args):
             if args.backup_file:
                 airbyte_model.write_yaml(args.backup_file)
             if args.wipe:
-                controller.wipe_all(airbyte_model, client)  # TODO: would be nice to wipe only the selected abstractions
+                controller.wipe_all(airbyte_model, client)
             print("Applying changes to deployment: " + client.airbyte_url)
             if args.sources or args.all:
                 controller.sync_sources_to_deployment(airbyte_model, client, workspace, dtos_from_config)
