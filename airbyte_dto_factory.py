@@ -245,6 +245,8 @@ class AirbyteDtoFactory:
             r.name = connection['name']
         if 'syncCatalog' in connection:
             r.sync_catalog = connection['syncCatalog']
+        if 'status' in connection:
+            r.status = connection['status']
         r.schedule = connection['schedule']
         r.status = connection['status']
         return r

@@ -167,18 +167,19 @@ class AirbyteClient:
         """Route: POST /v1/connections/create"""
         route = self.airbyte_url + 'api/v1/connections/create'
         if not connection_dto.sync_catalog:
-            source_schema = self.discover_source_schema(source_dto)  # TODO: test
-            connection_dto.sync_catalog = source_schema
+            source_schema = self.discover_source_schema(source_dto).payload
+            connection_dto.sync_catalog = source_schema['catalog']
         payload = {
             'name': connection_dto.name,
             'prefix': connection_dto.prefix,
             'sourceId': connection_dto.source_id,
             'destinationId': connection_dto.destination_id,
+            'status': connection_dto.status,
             'syncCatalog': connection_dto.sync_catalog,
         }
         if connection_dto.schedule:
-            payload['syncCatalog']['schedule'] = connection_dto.schedule
-        r = requests.post(route, json=payload)
+            payload['schedule'] = connection_dto.schedule
+        r = requests.post(route, json=payload)  # ERROR: response 400
         return AirbyteResponse(r)
 
     def delete_connection(self):

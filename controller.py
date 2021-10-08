@@ -157,19 +157,22 @@ class Controller:
         if 'connections' in dtos_from_config:
             for new_connection in dtos_from_config['connections']:
                 if new_connection.connection_id is None:  # create new connection
-                    # if source_id is none, resolve source_id from source_name
+                    # if source_id is none, attempt to resolve source_id from source_name
                     if new_connection.source_id is None:
-                        new_connection.source_id = next(i for i in airbyte_model.connections.val if
-                                                        i.source_name == new_connection.source_name)
-                    pass
-                    # check validity of source?
-
+                        for source in airbyte_model.sources.values():
+                            if source.name == new_connection.source_name:
+                                new_connection.source_id = source.source_id
+                                break
                     # if destination_id is none, resolve destination_id from destination_name
-
+                    if new_connection.destination_id is None:
+                        for destination in airbyte_model.destinations.values():
+                            if destination.name == new_connection.destination_name:
+                                new_connection.destination_id = destination.destination_id
+                                break
                     # if sync_catalog is none, generate a generic sync catalog from the source
-
-
-                    response = client.create_connection(new_connection, workspace)
+                    pass
+                    # create new connection
+                    response = client.create_connection(new_connection, airbyte_model.sources[new_connection.source_id])
                     connection_dto = self.dto_factory.build_connection_dto(response.payload)  # TODO: test
                     print("Created connection: " + connection_dto.connection_id)
                     airbyte_model.connections[connection_dto.connection_id] = connection_dto
