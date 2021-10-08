@@ -182,9 +182,13 @@ class AirbyteClient:
         r = requests.post(route, json=payload)  # ERROR: response 400
         return AirbyteResponse(r)
 
-    def delete_connection(self):
+    def delete_connection(self, connection_dto):
         """Route: POST /v1/connections/delete"""
-        pass
+        route = self.airbyte_url + 'api/v1/connections/delete'
+        payload = {'connectionId': connection_dto.connection_id}
+        print("Deleting connection: " + connection_dto.connection_id)
+        r = requests.post(route, json=payload)
+        return r.ok
 
     def reset_conection(self):
         """Route: POST /v1/connections/reset"""

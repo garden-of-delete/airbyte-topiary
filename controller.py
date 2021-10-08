@@ -198,14 +198,15 @@ class Controller:
 
     def wipe_connections(self, airbyte_model, client):
         """Wrapper for AirbyteConfigModel.wipe_connections"""
-        pass  # TODO: implement controller.wipe_connections
+        print("Wiping connections on " + client.airbyte_url)
+        airbyte_model.wipe_connections(client)
 
     def wipe_all(self, airbyte_model, client):
         """Wipes all sources, destinations, and connections in the specified airbyte deployment"""
         print("Wiping deployment: " + client.airbyte_url)
         self.wipe_sources(airbyte_model, client)
         self.wipe_destinations(airbyte_model, client)
-        # self.wipe_connections(client)
+        self.wipe_connections(airbyte_model,client)
 
     def validate_sources(self, airbyte_model, client):
         """Wrapper for AirbyteConfigModel.validate_sources"""

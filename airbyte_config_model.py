@@ -42,6 +42,17 @@ class AirbyteConfigModel:
         for destination_id in removed:
             self.destinations.pop(destination_id)
 
+    def wipe_connections(self, client):
+        """Removes all connections in self.connections from deployment and the model"""
+        removed = []
+        for connection in self.connections.values():
+            if client.delete_connection(connection):
+                removed.append(connection.connection_id)
+            else:
+                print("AirbyteConfigModel.wipe_connections : Unable to delete connection: " + repr(connection))
+        for connection_id in removed:
+            self.connections.pop(connection_id)
+            
     def validate(self, client):
         """this function validates the model and all included connectors"""
         print("Validating connectors...")

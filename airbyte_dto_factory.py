@@ -66,6 +66,7 @@ class ConnectionDto:
         self.destination_name = None
         self.sync_catalog = {}  # sync_catalog['streams'] is a list of dicts {stream:, config:}
         self.schedule = {}
+        self.namespace_definition = None
         self.status = 'active'
 
     def to_payload(self):
@@ -78,6 +79,7 @@ class ConnectionDto:
         r['schedule'] = self.schedule
         r['status'] = self.status
         r['syncCatalog'] = self.sync_catalog
+        r['namespaceDefinition'] = self.namespace_definition
         return r
 
 
@@ -247,6 +249,8 @@ class AirbyteDtoFactory:
             r.sync_catalog = connection['syncCatalog']
         if 'status' in connection:
             r.status = connection['status']
+        if 'namespaceDefinition' in connection:
+            r.status = connection['namespaceDefinition']
         r.schedule = connection['schedule']
         r.status = connection['status']
         return r

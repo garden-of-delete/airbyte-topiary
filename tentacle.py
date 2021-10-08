@@ -65,7 +65,7 @@ def main(args):
             if args.backup_file:
                 airbyte_model.write_yaml(args.backup_file)
             if args.wipe:
-                controller.wipe_all(airbyte_model, client)
+                controller.wipe_all(airbyte_model, client)  # TODO: would be nice to wipe only the selected abstractions
             print("Applying changes to deployment: " + client.airbyte_url)
             if args.sources or args.all:
                 controller.sync_sources_to_deployment(airbyte_model, client, workspace, dtos_from_config)
@@ -87,7 +87,7 @@ def main(args):
         if args.destinations or args.all:
             controller.wipe_destinations(airbyte_model, client)
         if args.connections or args.all:
-            pass  # TODO: implement controller.wipe_connections
+            controller.wipe_connections(airbyte_model, client)
 
     # validate workflow
     elif args.mode == 'validate':
