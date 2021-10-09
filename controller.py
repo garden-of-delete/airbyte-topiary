@@ -116,6 +116,9 @@ class Controller:
 
     def sync_sources_to_deployment(self, airbyte_model, client, workspace, dtos_from_config):
         for new_source in dtos_from_config['sources']:
+
+            source_exists = airbyte_model.has(new_source)
+
             if new_source.source_id is None:
                 response = client.create_source(new_source, workspace)
                 if response.ok:
@@ -129,7 +132,7 @@ class Controller:
                 if response.ok:
                     source_dto = self.dto_factory.build_source_dto(response.payload)
                     airbyte_model.sources[source_dto.source_id] = source_dto
-                    print("Modified source: " + source_dto.source_id)
+                    print("Updated source: " + source_dto.source_id)
                 else:
                     print("Error: unable to modify source: " + new_source.source_id)
 
@@ -145,7 +148,7 @@ class Controller:
                 if response.ok:
                     destination_dto = self.dto_factory.build_destination_dto(response.payload)
                     airbyte_model.destinations[destination_dto.destination_id] = destination_dto
-                    print("Modified destination: " + destination_dto.destination_id)
+                    print("Updated destination: " + destination_dto.destination_id)
                 else:
                     print("Error: unable to modify destination: " + new_destination.destination_id)
 
@@ -176,12 +179,12 @@ class Controller:
                     connection_dto = self.dto_factory.build_connection_dto(response.payload)  # TODO: test
                     print("Created connection: " + connection_dto.connection_id)
                     airbyte_model.connections[connection_dto.connection_id] = connection_dto
-                else:  # modify existing connection  # TODO: test modify existing connection
+                else:  # modify existing connection
                     response = client.update_connection(new_connection)
                     if response.ok:
                         connection_dto = self.dto_factory.build_connection_dto(response.payload)
                         airbyte_model.connections[connection_dto.connection_id] = connection_dto
-                        print("Modified connection: " + connection_dto.connection_id)
+                        print("Updated connection: " + connection_dto.connection_id)
                     else:
                         print("Error: unable to modify connection: " + new_connection.connection_id)
 

@@ -17,29 +17,28 @@ def test_airbyte_config_model__write_yaml(dummy_populated_airbyte_config_model, 
     assert t['destinations'][0] == dummy_destination_dict
 
 
-def test_apply_to_deployment():
-    pass
-
-
-def test_wipe_sources():
-    pass
-
-
-def test_wipe_destinations():
-    pass
-
-
-def test_validate():
-    pass
-
-
-def test_validate_sources():
-    pass
-
-
-def test_validate_destinations():
-    pass
-
-
-def test_validate_connections():
-    pass
+def test_has(dummy_airbyte_config_model, dummy_source_dto, dummy_destination_dto, dummy_connection_dto):
+    assert dummy_airbyte_config_model.has(dummy_source_dto) is True
+    assert dummy_airbyte_config_model.has(dummy_destination_dto) is True
+    assert dummy_airbyte_config_model.has(dummy_connection_dto) is True
+    # modify ids and check false
+    dummy_source_dto.source_id += 'mod'
+    dummy_destination_dto.destination_id += 'mod'
+    dummy_connection_dto.connection_id += 'mod'
+    assert dummy_airbyte_config_model.has(dummy_source_dto) is False
+    assert dummy_airbyte_config_model.has(dummy_destination_dto) is False
+    assert dummy_airbyte_config_model.has(dummy_connection_dto) is False
+    # remove ids, causing .has to check against name. check true
+    dummy_source_dto.source_id = None
+    dummy_destination_dto.destination_id += None
+    dummy_connection_dto.connection_id += None
+    assert dummy_airbyte_config_model.has(dummy_source_dto) is True
+    assert dummy_airbyte_config_model.has(dummy_destination_dto) is True
+    assert dummy_airbyte_config_model.has(dummy_connection_dto) is True
+    # modify names and check false
+    dummy_source_dto.source_name += 'mod'
+    dummy_destination_dto.destination_namme += 'mod'
+    dummy_connection_dto.source_name += 'mod'
+    assert dummy_airbyte_config_model.has(dummy_source_dto) is False
+    assert dummy_airbyte_config_model.has(dummy_destination_dto) is False
+    assert dummy_airbyte_config_model.has(dummy_connection_dto) is False

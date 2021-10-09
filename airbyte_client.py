@@ -198,9 +198,12 @@ class AirbyteClient:
         """Route: POST /v1/connections/sync"""
         pass
 
-    def update_connection(self):
+    def update_connection(self, connection_dto):
         """Route: POST /v1/connections/update"""
-        pass
+        route = self.airbyte_url + 'api/v1/connections/update'
+        payload = connection_dto.to_payload()
+        r = requests.post(route, json=payload)
+        return AirbyteResponse(r)
 
     def get_connection_state(self):
         """Route: POST /v1/state/get"""

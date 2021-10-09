@@ -209,6 +209,18 @@ def dummy_airbyte_dto_factory(dummy_source_definitions, dummy_destination_defini
 
 
 @pytest.fixture
+def dummy_airbyte_config_model(dummy_source_dto, dummy_destination_dto, dummy_connection_dto):
+    """
+    Create a dummy AirbyteConfigModel given some dummy dtos
+    """
+    config_model = AirbyteConfigModel()
+    config_model.sources[dummy_source_dto.source_id] = dummy_source_dto
+    config_model.destinations[dummy_destination_dto.destination_id] = dummy_destination_dto
+    config_model.sources[dummy_source_dto.source_id] = dummy_source_dto
+    return config_model
+
+
+@pytest.fixture
 def dummy_secrets_dict():
     """
     Create dummy secrets for the dummy sources and destinations (as dict)
