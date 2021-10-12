@@ -40,16 +40,16 @@ Same as Sources, but will probably have more destination specific details in the
 Optionally, a `destinationId` (uuid) can be provided to bypass using `name` to check if the source already exists in the Airbyte deployment during a `sync` operation.
 
 ### Connections
-Connections require the following:
-`sourceName` or `sourceId`: used to identify the source. Id will be tried first, then name.
-`destinationName` or `destinationId`: used to identify the destination. Id will be tried first, then name.
-`connectionName` or `connectionId`: used to provide a name for a new connection (not visible in Airbyte's GUI), or to target an existing connection for changes
-`prefix`: prefixes the tables produced by the connection. For example `github_superset_`
-`namespaceDefinition`: tells the connection to use the namespace configuration (schema / dataset information, other details) of the source, destination, or custom. I personally leave the namespace configuration up to the destination (`destination`).
-`schedule`:
-    `units`: number of units of time as an integer
-    `timeUnit`: units of time used (`hours`, `days`, etc)
-`status`: active or inactive. Note: 
+Connections require the following: \\
+`sourceName` or `sourceId`: used to identify the source. Id will be tried first, then name.\\
+`destinationName` or `destinationId`: used to identify the destination. Id will be tried first, then name.\\
+`connectionName` or `connectionId`: used to provide a name for a new connection (not visible in Airbyte's GUI), or to target an existing connection for changes\\
+`prefix`: prefixes the tables produced by the connection. For example `github_superset_`\\
+`namespaceDefinition`: tells the connection to use the namespace configuration (schema / dataset information, other details) of the source, destination, or custom. I personally leave the namespace configuration up to the destination (`destination`).\\
+`schedule`:\\
+    `units`: number of units of time as an integer\\
+    `timeUnit`: units of time used (`hours`, `days`, etc)\\
+`status`: active or inactive. Note: \\
 
 Optionally, a `syncCatalog` can also be specified. This monstrosity is specific to each source and contains the configration for each of the streams in the connection. Since the `syncCatalog` as expected by the Airbyte API is not particularly human readable, tentacle provides some options here:
 - If a `syncCatalog` is not provided, tentacle will retrieve the default sync catalog from the source and use that. Note, the default syncCatalog has all available streams selected with the defauly sync mode (usually "Full Refresh - Overwrite/Append")
@@ -149,7 +149,7 @@ As with `wipe` mode, these optional arguments can be used in combination to defi
 - `--all` (same as `--sources --destinations --connections`)
 
 # Contributing
-This is a small project i've been building in my free time, so there isn't much structure needed around contributing (for now). Check the issue list, fork it, modify it, and open a PR :)
+This is a small project i've been building in my free time, so there isn't much structure needed around contributing (for now). Check the issue list, open an issue for your change if needed, fork the project, modify it, then open a PR :)
 
 # Acknowledgements
 Thanks to Abhi and the Airbyte team for being responsive to questions and feedback during the development process. Also big thanks to the team at Preset.io for suppoporting the concept and my use of Airbyte while employed there.
