@@ -1,5 +1,5 @@
 # Airbyte Tentacle
-Airbyte tentacle is an open-source configuration and deployment management tool for [Airbyte](https://github.com/airbytehq/airbyte). **As this tool is early in development, I *highly* recommend reading below before using the tool to avoid irreversable (potentially unexpected) changes to your Airbyte deployment.**
+Airbyte tentacle is an open-source configuration and deployment management tool for [Airbyte](https://github.com/airbytehq/airbyte). **As this tool is early in development, I *highly* recommend reading below before using the tool to avoid irreversible (potentially unexpected) changes to your Airbyte deployment.**
 
 # Releases
 No releases yet.
@@ -20,7 +20,7 @@ Airbyte tentacle allows configuration for an airbyte deployment to be moved to a
 ### Sources
 Sources require the following:  
 `name`: a name given to the source. **should be unique across the whole Airbyte deployment**  
-`sourceName`: the name assocuated with the Airbyte connector. e.g. GitHub, Slack. Used to choose the right connector type when creating a new source.  
+`sourceName`: the name associated with the Airbyte connector. e.g. GitHub, Slack. Used to choose the right connector type when creating a new source.  
 `connectionConfiguration`: specific to each source. Check the documentation for that source to get a list. Will include things like:  
     `access_token` / `api_token` / `some_other_secret`  
     `repository`  
@@ -28,7 +28,7 @@ Sources require the following:
 
 Optionally, a `sourceId` (uuid) can be provided to bypass using `name` to check if the source already exists in the Airbyte deployment during a `sync` operation.
 
-### Destinaetions
+### Destinations
 Same as Sources, but will probably have more destination specific details in the `connectionConfiguration` section. For example, the BigQuery destination requires something like:
 ```
     big_query_client_buffer_size_mb: 15
@@ -51,11 +51,11 @@ Connections require the following:
     `timeUnit`: units of time used (`hours`, `days`, etc)  
 `status`: active or inactive. Note: an "active" connector with a schedule will start a sync attempt in Airbyte immediately upon creation.
 
-Optionally, a `syncCatalog` can also be specified. This monstrosity is specific to each source and contains the configration for each of the streams in the connection. Since the `syncCatalog` as expected by the Airbyte API is not particularly human readable, tentacle provides some options here:
-- If a `syncCatalog` is not provided, tentacle will retrieve the default sync catalog from the source and use that. Note, the default syncCatalog has all available streams selected with the defauly sync mode (usually "Full Refresh - Overwrite/Append")
+Optionally, a `syncCatalog` can also be specified. This monstrosity is specific to each source and contains the configuration for each of the streams in the connection. Since the `syncCatalog` as expected by the Airbyte API is not particularly human readable, tentacle provides some options here:
+- If a `syncCatalog` is not provided, tentacle will retrieve the default sync catalog from the source and use that. Note, the default syncCatalog has all available streams selected with the default sync mode (usually "Full Refresh - Overwrite/Append")
 - To modify the `syncCatalog` for an existing connection, I would recommend first syncing the connection to yaml before making changes and applying back to Airbyte. Read the "**The Sync Workflow**" section below to see how to do this.
 
-A connection connecting a GitHub source to a BigQuery destination might look sopmething like this (no SyncCatalog provided, so defaults will be used):
+A connection connecting a GitHub source to a BigQuery destination might look something like this (no SyncCatalog provided, so defaults will be used):
 ```
  - sourceName: apache/superset
     destinationName: community-data-bq
@@ -71,7 +71,7 @@ A connection connecting a GitHub source to a BigQuery destination might look sop
 Airbyte tentacle supports a number of workflows designed to make managing Airbyte deployments at scale easier. These are:
 - **sync**: applies configuration provided as yml to an Airbyte deployment, OR retrieves the configuration of an Airbyte deployment and writes it to .yml
 - **wipe**: deletes the specified connectors (sources, destinations) and associated connections / configuration
-- **vaidate**: validates all sources and destinations
+- **validate**: validates all sources and destinations
 
 ## The Sync Workflow
 All the sync workflows described below are accessed through the **sync** master mode like so:
@@ -152,7 +152,7 @@ As with `wipe` mode, these optional arguments can be used in combination to defi
 This is a small project i've been building in my free time, so there isn't much structure needed around contributing (for now). Check the issue list, open an issue for your change if needed, fork the project, modify it, then open a PR :)
 
 # Acknowledgements
-Thanks to Abhi and the Airbyte team for being responsive to questions and feedback during the development process. Also big thanks to the team at Preset.io for suppoporting the concept and my use of Airbyte while employed there.
+Thanks to Abhi and the Airbyte team for being responsive to questions and feedback during the development process. Also big thanks to the team at Preset.io for supporting the concept and my use of Airbyte while employed there.
 
 # License
 Copyright 2021 Robert Stolz
