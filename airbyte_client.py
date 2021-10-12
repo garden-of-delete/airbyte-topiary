@@ -10,10 +10,11 @@ RESPONSE_CODES = {
 
 class AirbyteResponse:
     def __init__(self, response):
-        if response.status_code in RESPONSE_CODES:
+        self.status_code = response.status_code
+        if self.status_code in RESPONSE_CODES:
             self.message = RESPONSE_CODES[response.status_code]
         else:
-            self.message = "Unrecognized response code"
+            self.message = "Error: Client : Unrecognized response code"
         self.payload = response.json()
         self.ok = response.ok
         # TODO: include the full response object
@@ -176,10 +177,9 @@ class AirbyteClient:
             'destinationId': connection_dto.destination_id,
             'status': connection_dto.status,
             'syncCatalog': connection_dto.sync_catalog,
+            'schedule': connection_dto.schedule
         }
-        if connection_dto.schedule:
-            payload['schedule'] = connection_dto.schedule
-        r = requests.post(route, json=payload)  # ERROR: response 400
+        r = requests.post(route, json=payload)
         return AirbyteResponse(r)
 
     def delete_connection(self, connection_dto):
@@ -201,7 +201,13 @@ class AirbyteClient:
     def update_connection(self, connection_dto):
         """Route: POST /v1/connections/update"""
         route = self.airbyte_url + 'api/v1/connections/update'
-        payload = connection_dto.to_payload()
+        payload = {
+            'connectionId': connection_dto.connection_id,
+            'prefix': connection_dto.prefix,
+            'status': connection_dto.status,
+            'syncCatalog': connection_dto.sync_catalog,
+            'schedule': connection_dto.schedule
+        }
         r = requests.post(route, json=payload)
         return AirbyteResponse(r)
 

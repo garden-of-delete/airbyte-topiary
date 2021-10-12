@@ -127,6 +127,7 @@ class Controller:
                         airbyte_model.sources[source_dto.source_id] = source_dto
                     else:
                         print("Error: unable to modify source: " + new_source.source_id)
+                        print('Response code: ' + repr(response.status_code) + ' ' + response.message)
                 else:  # source does not exist
                     response = client.create_source(new_source, workspace)
                     if response.ok:
@@ -135,6 +136,7 @@ class Controller:
                         airbyte_model.sources[source_dto.source_id] = source_dto
                     else:
                         print("Error: unable to modify source: " + new_source.source_id)
+                        print('Response code: ' + repr(response.status_code) + ' ' + response.message)
         else:
             print('Warning: --sources option used, but no sources found in provided config.yml')
 
@@ -151,6 +153,7 @@ class Controller:
                         airbyte_model.destinations[destination_dto.destination_id] = destination_dto
                     else:
                         print("Error: unable to modify destination: " + new_destination.destination_id)
+                        print('Response code: ' + repr(response.status_code) + ' ' + response.message)
                 else:  # destination does not exist
                     response = client.create_destination(new_destination, workspace)
                     if response.ok:
@@ -159,10 +162,11 @@ class Controller:
                         airbyte_model.destinations[destination_dto.destination_id] = destination_dto
                     else:
                         print("Error: unable to modify destination: " + new_destination.destination_id)
+                        print('Response code: ' + repr(response.status_code) + ' ' + response.message)
         else:
             print('Warning: --destinations option used, but no destinations found in provided config.yml')
 
-    def sync_connections_to_deployment(self, airbyte_model, client, dtos_from_config):  #TODO: resolve if workspace is needed here
+    def sync_connections_to_deployment(self, airbyte_model, client, dtos_from_config):
         """
         Applies a collection of connectionDtos and/or connectionGroupDtos (experimental), to an airbyte deployment
         """
@@ -187,15 +191,22 @@ class Controller:
                         print("Created connection: " + connection_dto.connection_id)
                         airbyte_model.connections[connection_dto.connection_id] = connection_dto
                     else:
-                        print("Error: unable to create connection: " + new_connection.name + ' ' + new_connection.id)
+                        print("Error: unable to create connection: " + new_connection.name + ' '
+                              + new_connection.connection_id)
+                        print('Response code: ' + repr(response.status_code) + ' ' + response.message)
                 else:  # modify existing connection
+                    if not new_connection.sync_catalog:
+                        new_connection.sync_catalog = airbyte_model.connections[new_connection.connection_id]\
+                            .sync_catalog
                     response = client.update_connection(new_connection)
                     if response.ok:
                         connection_dto = self.dto_factory.build_connection_dto(response.payload)
                         airbyte_model.connections[connection_dto.connection_id] = connection_dto
                         print("Updated connection: " + connection_dto.connection_id)
                     else:
-                        print("Error: unable to modify connection: " + new_connection.name + ' ' + new_connection.id)
+                        print("Error: unable to modify connection: " + new_connection.name + ' '
+                              + new_connection.connection_id)
+                        print('Response code: ' + repr(response.status_code) + ' ' + response.message)
         else:
             print('Warning: --connections option used, but no connections found in provided config.yml')
 
