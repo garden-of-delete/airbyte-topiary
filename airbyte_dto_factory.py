@@ -11,6 +11,9 @@ class SourceDto:
         self.source_name = None
         self.tags = []
 
+    def get_identity(self):
+        return self.source_id, self.name
+
     def to_payload(self):
         """
         sends this dto object to a dict formatted as a payload
@@ -37,6 +40,9 @@ class DestinationDto:
         self.name = None
         self.destination_name = None
         self.tags = []
+
+    def get_identity(self):
+        return self.destination_id, self.name
 
     def to_payload(self):
         """
@@ -68,6 +74,9 @@ class ConnectionDto:
         self.schedule = {}
         self.namespace_definition = None
         self.status = 'active'
+
+    def get_identity(self):
+        return self.connection_id, self.name
 
     def to_payload(self):
         r = {}

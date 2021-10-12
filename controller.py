@@ -115,70 +115,79 @@ class Controller:
         return new_dtos
 
     def sync_sources_to_deployment(self, airbyte_model, client, workspace, dtos_from_config):
-        for new_source in dtos_from_config['sources']:
-
-            source_exists = airbyte_model.has(new_source)
-
-            if new_source.source_id is None:
-                response = client.create_source(new_source, workspace)
-                if response.ok:
-                    source_dto = self.dto_factory.build_source_dto(response.payload)
-                    print("Created source: " + source_dto.source_id)
-                    airbyte_model.sources[source_dto.source_id] = source_dto
-                else:
-                    print("Error creating connector " + new_source.name + ": " + response.message)
-            else:
-                response = client.update_source(new_source)
-                if response.ok:
-                    source_dto = self.dto_factory.build_source_dto(response.payload)
-                    airbyte_model.sources[source_dto.source_id] = source_dto
-                    print("Updated source: " + source_dto.source_id)
-                else:
-                    print("Error: unable to modify source: " + new_source.source_id)
+        if 'sources' in dtos_from_config:
+            for new_source in dtos_from_config['sources']:
+                if airbyte_model.has(new_source): # source already exists by name or id in the deployment
+                    if new_source.source_id is None: # if no id on the provided source
+                        new_source.source_id = airbyte_model.name_to_id(new_source.name)
+                    response = client.update_source(new_source)
+                    if response.ok:
+                        source_dto = self.dto_factory.build_source_dto(response.payload)
+                        print("Updated source: " + source_dto.source_id)
+                        airbyte_model.sources[source_dto.source_id] = source_dto
+                    else:
+                        print("Error: unable to modify source: " + new_source.source_id)
+                else:  # source does not exist
+                    response = client.create_source(new_source, workspace)
+                    if response.ok:
+                        source_dto = self.dto_factory.build_source_dto(response.payload)
+                        print("Updated source: " + source_dto.source_id)
+                        airbyte_model.sources[source_dto.source_id] = source_dto
+                    else:
+                        print("Error: unable to modify source: " + new_source.source_id)
+        else:
+            print('Warning: --sources option used, but no sources found in provided config.yml')
 
     def sync_destinations_to_deployment(self, airbyte_model, client, workspace, dtos_from_config):
-        for new_destination in dtos_from_config['destinations']:
-            if new_destination.destination_id is None:
-                response = client.create_destination(new_destination, workspace)
-                destination_dto = self.dto_factory.build_destination_dto(response.payload)
-                print("Created destination: " + destination_dto.destination_id)
-                airbyte_model.destinations[destination_dto.destination_id] = destination_dto
-            else:
-                response = client.update_destination(new_destination)
-                if response.ok:
-                    destination_dto = self.dto_factory.build_destination_dto(response.payload)
-                    airbyte_model.destinations[destination_dto.destination_id] = destination_dto
-                    print("Updated destination: " + destination_dto.destination_id)
-                else:
-                    print("Error: unable to modify destination: " + new_destination.destination_id)
+        if 'destinations' in dtos_from_config:
+            for new_destination in dtos_from_config['destinations']:
+                if airbyte_model.has(new_destination):  # destination already exists by name or id in the deployment
+                    if new_destination.destination_id is None:  # if no id on the provided destination
+                        new_destination.destination_id = airbyte_model.name_to_id(new_destination.name)
+                    response = client.update_destination(new_destination)
+                    if response.ok:
+                        destination_dto = self.dto_factory.build_destination_dto(response.payload)
+                        print("Updated destination: " + destination_dto.destination_id)
+                        airbyte_model.destinations[destination_dto.destination_id] = destination_dto
+                    else:
+                        print("Error: unable to modify destination: " + new_destination.destination_id)
+                else:  # destination does not exist
+                    response = client.create_destination(new_destination, workspace)
+                    if response.ok:
+                        destination_dto = self.dto_factory.build_destination_dto(response.payload)
+                        print("Updated destination: " + destination_dto.destination_id)
+                        airbyte_model.destinations[destination_dto.destination_id] = destination_dto
+                    else:
+                        print("Error: unable to modify destination: " + new_destination.destination_id)
+        else:
+            print('Warning: --destinations option used, but no destinations found in provided config.yml')
 
-    def sync_connections_to_deployment(self, airbyte_model, client, workspace, dtos_from_config):
+    def sync_connections_to_deployment(self, airbyte_model, client, dtos_from_config):  #TODO: resolve if workspace is needed here
         """
-        Applies a collection of connectionDtos and/or connectionGroupDtos, to an airbyte deployment
+        Applies a collection of connectionDtos and/or connectionGroupDtos (experimental), to an airbyte deployment
         """
         # create or modify each connection defined in yml
         if 'connections' in dtos_from_config:
             for new_connection in dtos_from_config['connections']:
+                # verify the new_connection has a valid source_id and destination_id before proceeding
+                if new_connection.source_id is None:
+                    new_connection.source_id = airbyte_model.name_to_id(new_connection.source_name)
+                if new_connection.destination_id is None:
+                    new_connection.destination_id = airbyte_model.name_to_id(new_connection.destination_name)
+                if airbyte_model.has(new_connection):  # connection already exists by name or id in the deployment
+                    if new_connection.connection_id is None:  # if no id on the provided connection
+                        new_connection.connection_id = airbyte_model.name_to_id(new_connection.name)
+                if new_connection.source_id is None or new_connection.destination_id is None:
+                    print("Error: Failed to create or update a connection : sourceId or destinationId unresolved")
+                    return
                 if new_connection.connection_id is None:  # create new connection
-                    # if source_id is none, attempt to resolve source_id from source_name
-                    if new_connection.source_id is None:
-                        for source in airbyte_model.sources.values():
-                            if source.name == new_connection.source_name:
-                                new_connection.source_id = source.source_id
-                                break
-                    # if destination_id is none, resolve destination_id from destination_name
-                    if new_connection.destination_id is None:
-                        for destination in airbyte_model.destinations.values():
-                            if destination.name == new_connection.destination_name:
-                                new_connection.destination_id = destination.destination_id
-                                break
-                    # if sync_catalog is none, generate a generic sync catalog from the source
-                    pass
-                    # create new connection
                     response = client.create_connection(new_connection, airbyte_model.sources[new_connection.source_id])
-                    connection_dto = self.dto_factory.build_connection_dto(response.payload)  # TODO: test
-                    print("Created connection: " + connection_dto.connection_id)
-                    airbyte_model.connections[connection_dto.connection_id] = connection_dto
+                    if response.ok:
+                        connection_dto = self.dto_factory.build_connection_dto(response.payload)
+                        print("Created connection: " + connection_dto.connection_id)
+                        airbyte_model.connections[connection_dto.connection_id] = connection_dto
+                    else:
+                        print("Error: unable to create connection: " + new_connection.name + ' ' + new_connection.id)
                 else:  # modify existing connection
                     response = client.update_connection(new_connection)
                     if response.ok:
@@ -186,7 +195,9 @@ class Controller:
                         airbyte_model.connections[connection_dto.connection_id] = connection_dto
                         print("Updated connection: " + connection_dto.connection_id)
                     else:
-                        print("Error: unable to modify connection: " + new_connection.connection_id)
+                        print("Error: unable to modify connection: " + new_connection.name + ' ' + new_connection.id)
+        else:
+            print('Warning: --connections option used, but no connections found in provided config.yml')
 
 
     def wipe_sources(self, airbyte_model, client):

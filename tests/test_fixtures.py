@@ -51,7 +51,7 @@ def dummy_connection_dto():
     connection.source_name = 'apache/superset'
     connection.destination_id = 'a41cb2f8-fcce-4c91-adfe-37c4586609f5'
     connection.destination_name = 'postgres'
-    connection.name = 'default'
+    connection.name = 'superset-to-postgres'
     connection.prefix = 'github_superset_'
     connection.schedule = {'units': 24, 'timeUnit': 'hours'}
     connection.status = 'active'
@@ -159,7 +159,7 @@ def dummy_existing_connection_dict():
         'connectionId': '10290824-9305-47cc-8966-6dd032abd3c0',
         'sourceId': '7d95ec85-47c6-42d4-a7a2-8e5c22c810d2',
         'destinationId': 'a41cb2f8-fcce-4c91-adfe-37c4586609f5',
-        'name': 'default',
+        'name': 'superset-to-postgres',
         'prefix': 'github_superset_',
         'schedule': {'units': 24, 'timeUnit': 'hours'},
         'status': 'active',
@@ -176,6 +176,7 @@ def dummy_new_connection_dict():
     connection_dict = {
         'sourceName': 'apache/superset',
         'destinationName': 'postgres',
+        'name': 'superset-to-postgres',
         'prefix': 'github_superset_',
         'schedule': {'units': 24, 'timeUnit': 'hours'},
         'status': 'active',
@@ -216,7 +217,16 @@ def dummy_airbyte_config_model(dummy_source_dto, dummy_destination_dto, dummy_co
     config_model = AirbyteConfigModel()
     config_model.sources[dummy_source_dto.source_id] = dummy_source_dto
     config_model.destinations[dummy_destination_dto.destination_id] = dummy_destination_dto
+    config_model.connections[dummy_connection_dto.connection_id] = dummy_connection_dto
+    return config_model
+
+
+@pytest.fixture
+def dummy_populated_airbyte_config_model(dummy_source_dto, dummy_destination_dto, dummy_connection_dto):
+    config_model = AirbyteConfigModel()
     config_model.sources[dummy_source_dto.source_id] = dummy_source_dto
+    config_model.destinations[dummy_destination_dto.destination_id] = dummy_destination_dto
+    config_model.connections[dummy_connection_dto.connection_id] = dummy_connection_dto
     return config_model
 
 
@@ -235,12 +245,3 @@ def dummy_secrets_dict():
         }
     }
     return secrets_dict
-
-
-@pytest.fixture
-def dummy_populated_airbyte_config_model(dummy_source_dto, dummy_destination_dto, dummy_connection_dto):
-    config_model = AirbyteConfigModel()
-    config_model.sources[dummy_source_dto.source_id] = dummy_source_dto
-    config_model.destinations[dummy_destination_dto.destination_id] = dummy_destination_dto
-    config_model.connections[dummy_connection_dto.connection_id] = dummy_connection_dto
-    return config_model

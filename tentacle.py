@@ -47,7 +47,7 @@ def main(args):
                 if args.validate:
                     controller.validate_destinations(airbyte_model, client)
             if args.connections or args.all:
-                controller.sync_connections_to_deployment(airbyte_model, client, workspace, dtos_from_config)
+                controller.sync_connections_to_deployment(airbyte_model, client, dtos_from_config)
                 if args.validate:
                     controller.validate_connections(airbyte_model, client)
 
