@@ -18,13 +18,13 @@ Activate the environment with `. .venv/bin/activate`
 Airbyte tentacle allows configuration for an airbyte deployment to be moved to and from yaml files through interaction with the Airbyte API. Provided .yml configuration is first validated, but care should be taken to ensure all the details are correct. Check the `examples/` directory to see some example configurations.
 
 ### Sources
-Sources require the following:
-`name`: a name given to the source. **should be unique across the whole Airbyte deployment**
-`sourceName`: the name assocuated with the Airbyte connector. e.g. GitHub, Slack. Used to choose the right connector type when creating a new source.
-`connectionConfiguration`: specific to each source. Check the documentation for that source to get a list. Will include things like:
-    `access_token` / `api_token` / `some_other_secret`
-    `repository`
-    `start_date` (provided as a standard timestamp YYYY-MM-DDThr:mm:ssZ)
+Sources require the following:  
+`name`: a name given to the source. **should be unique across the whole Airbyte deployment**  
+`sourceName`: the name assocuated with the Airbyte connector. e.g. GitHub, Slack. Used to choose the right connector type when creating a new source.  
+`connectionConfiguration`: specific to each source. Check the documentation for that source to get a list. Will include things like:  
+    `access_token` / `api_token` / `some_other_secret`  
+    `repository`  
+    `start_date` (provided as a standard timestamp YYYY-MM-DDThr:mm:ssZ)  
 
 Optionally, a `sourceId` (uuid) can be provided to bypass using `name` to check if the source already exists in the Airbyte deployment during a `sync` operation.
 
@@ -40,16 +40,16 @@ Same as Sources, but will probably have more destination specific details in the
 Optionally, a `destinationId` (uuid) can be provided to bypass using `name` to check if the source already exists in the Airbyte deployment during a `sync` operation.
 
 ### Connections
-Connections require the following: \\
-`sourceName` or `sourceId`: used to identify the source. Id will be tried first, then name.\\
-`destinationName` or `destinationId`: used to identify the destination. Id will be tried first, then name.\\
-`connectionName` or `connectionId`: used to provide a name for a new connection (not visible in Airbyte's GUI), or to target an existing connection for changes\\
-`prefix`: prefixes the tables produced by the connection. For example `github_superset_`\\
-`namespaceDefinition`: tells the connection to use the namespace configuration (schema / dataset information, other details) of the source, destination, or custom. I personally leave the namespace configuration up to the destination (`destination`).\\
-`schedule`:\\
-    `units`: number of units of time as an integer\\
-    `timeUnit`: units of time used (`hours`, `days`, etc)\\
-`status`: active or inactive. Note: \\
+Connections require the following:  
+`sourceName` or `sourceId`: used to identify the source. Id will be tried first, then name.  
+`destinationName` or `destinationId`: used to identify the destination. Id will be tried first, then name.  
+`connectionName` or `connectionId`: used to provide a name for a new connection (not visible in Airbyte's GUI), or to target an existing connection for changes  
+`prefix`: prefixes the tables produced by the connection. For example `github_superset_`  
+`namespaceDefinition`: tells the connection to use the namespace configuration (schema / dataset information, other details) of the source, destination, or custom. I personally leave the namespace configuration up to the destination (`destination`).  
+`schedule`:  
+    `units`: number of units of time as an integer  
+    `timeUnit`: units of time used (`hours`, `days`, etc)  
+`status`: active or inactive. Note: an "active" connector with a schedule will start a sync attempt in Airbyte immediately upon creation.
 
 Optionally, a `syncCatalog` can also be specified. This monstrosity is specific to each source and contains the configration for each of the streams in the connection. Since the `syncCatalog` as expected by the Airbyte API is not particularly human readable, tentacle provides some options here:
 - If a `syncCatalog` is not provided, tentacle will retrieve the default sync catalog from the source and use that. Note, the default syncCatalog has all available streams selected with the defauly sync mode (usually "Full Refresh - Overwrite/Append")
