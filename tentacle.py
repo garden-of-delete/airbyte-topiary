@@ -1,33 +1,6 @@
 #!/usr/bin/env python3
 """
 This is a simple, open-source tool designed to help manage Airbyte deployments at scale through via the API.
-
-TODO LIST:
-- (done) Implement "check" routes for source and destination validation
-- (done) Drop description and code supporting the deployment to deployment use case
-- Implement the connection routes, dto class, and all associated functions
-- (done) Restructure main method as a proper controller. All feedback to user should come from controller
-- Finalize the yaml to deployment workflow
-    - (done) Add print statements to create_source and create_destination
-    - (done) Add ability for user to override workspace slug
-    - (done) Address modification of existing sources and destinations
-    - (done) Clarify all arg processor functions related to this workflow
-    - (in progress) implement the --backup option
-    - (stretch): modification of connections
-- (done) Deployment to yaml workflow
-- (done) Wipe target workflow
-- (done) Validate workflow
-- (in progress) README.md
-- (done) License
-- Decorators
-- Type hinting
-- Tests!
-- Post 0.1.0
-    - CI
-    - Linter
-    - Support for multiple workspaces
-    - Update deployment workflow
-    - Better management of multiple sets of credentials / better secrets management in general
 """
 
 __author__ = "Robert Stolz"
@@ -54,26 +27,29 @@ def main(args):
 
     # sync workflow
     if args.mode == 'sync':
-        if utils.is_yaml(args.target):
+        if utils.is_yaml(args.target):  # deployment to yaml sync workflow
             airbyte_model.write_yaml(args.target)
-        else:
+            print("Output written to: " + args.target)
+        else:  # yaml to deployment sync workflow
             yaml_config, secrets = controller.read_yaml_config(args)
-            new_dtos = controller.build_dtos_from_yaml_config(yaml_config, secrets)
+            dtos_from_config = controller.build_dtos_from_yaml_config(yaml_config, secrets)
             if args.backup_file:
                 airbyte_model.write_yaml(args.backup_file)
             if args.wipe:
                 controller.wipe_all(airbyte_model, client)
             print("Applying changes to deployment: " + client.airbyte_url)
             if args.sources or args.all:
-                controller.sync_sources(airbyte_model, client, workspace, new_dtos)
+                controller.sync_sources_to_deployment(airbyte_model, client, workspace, dtos_from_config)
                 if args.validate:
                     controller.validate_sources(airbyte_model, client)
             if args.destinations or args.all:
-                controller.sync_destinations(airbyte_model, client, workspace, new_dtos)
+                controller.sync_destinations_to_deployment(airbyte_model, client, workspace, dtos_from_config)
                 if args.validate:
                     controller.validate_destinations(airbyte_model, client)
             if args.connections or args.all:
-                pass  # TODO: implement controller.sync_connection
+                controller.sync_connections_to_deployment(airbyte_model, client, dtos_from_config)
+                if args.validate:
+                    controller.validate_connections(airbyte_model, client)
 
     # wipe workflow
     elif args.mode == 'wipe':
@@ -82,7 +58,7 @@ def main(args):
         if args.destinations or args.all:
             controller.wipe_destinations(airbyte_model, client)
         if args.connections or args.all:
-            pass  # TODO: implement controller.wipe_connections
+            controller.wipe_connections(airbyte_model, client)
 
     # validate workflow
     elif args.mode == 'validate':

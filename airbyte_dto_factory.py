@@ -1,6 +1,7 @@
 class SourceDto:
-    """Data transfer object class for Source-type Airbyte abstractions"""
-
+    """
+    Data transfer object class for Source-type Airbyte abstractions
+    """
     def __init__(self):
         self.source_definition_id = None
         self.source_id = None
@@ -8,10 +9,15 @@ class SourceDto:
         self.connection_configuration = {}
         self.name = None
         self.source_name = None
-        self.tag = None
+        self.tags = []
+
+    def get_identity(self):
+        return self.source_id, self.name
 
     def to_payload(self):
-        """sends this dto object to a dict formatted as a payload"""
+        """
+        sends this dto object to a dict formatted as a payload
+        """
         r = {}
         r['sourceDefinitionId'] = self.source_definition_id
         r['sourceId'] = self.source_id
@@ -23,8 +29,9 @@ class SourceDto:
 
 
 class DestinationDto:
-    """Data transfer object class for Destination-type Airbyte abstractions"""
-
+    """
+    Data transfer object class for Destination-type Airbyte abstractions
+    """
     def __init__(self):
         self.destination_definition_id = None
         self.destination_id = None
@@ -32,10 +39,15 @@ class DestinationDto:
         self.connection_configuration = {}
         self.name = None
         self.destination_name = None
-        self.tag = None
+        self.tags = []
+
+    def get_identity(self):
+        return self.destination_id, self.name
 
     def to_payload(self):
-        """sends this dto object to a dict formatted as a payload"""
+        """
+        sends this dto object to a dict formatted as a payload
+        """
         r = {}
         r['destinationDefinitionId'] = self.destination_definition_id
         r['destinationId'] = self.destination_id
@@ -47,24 +59,76 @@ class DestinationDto:
 
 
 class ConnectionDto:
-    """Data transfer object class for Connection-type Airbyte abstractions"""
-
+    """
+    Data transfer object class for Connection-type Airbyte abstractions
+    """
     def __init__(self):
         self.connection_id = None
-        self.name = None
-        self.prefix = None
+        self.name = 'default'
+        self.prefix = ''
         self.source_id = None
+        self.source_name = None
         self.destination_id = None
+        self.destination_name = None
         self.sync_catalog = {}  # sync_catalog['streams'] is a list of dicts {stream:, config:}
         self.schedule = {}
-        self.status = None
+        self.namespace_definition = None
+        self.status = 'active'
+
+    def get_identity(self):
+        return self.connection_id, self.name
 
     def to_payload(self):
-        pass  # TODO: implement the to_payload method
+        r = {}
+        r['connectionId'] = self.connection_id
+        r['sourceId'] = self.source_id
+        r['destinationId'] = self.destination_id
+        r['name'] = self.name
+        r['prefix'] = self.prefix
+        r['schedule'] = self.schedule
+        r['status'] = self.status
+        r['syncCatalog'] = self.sync_catalog
+        r['namespaceDefinition'] = self.namespace_definition
+        return r
+
+
+class ConnectionGroupDto:
+    """
+    Data transfer object class for connection groups, each one representing a set of connections
+    Note, Airbyte does not have this abstraction internally
+
+    ConnectionGroupDto also does not have a to_payload method, as it will never need to be written to .yml,
+    or interact directly with the client, only read. Instead, to_incomplete_connection_dict sends the
+    relevant info for making a new ConnectionDto to a dict.
+    """
+
+    def __init__(self):
+        self.group_name = None
+        self.prefix = ''
+        self.source_tags = None
+        self.destination_tags = None
+        self.sync_catalog = {}  # sync_catalog['streams'] is a list of dicts {stream:, config:}
+        self.schedule = {}
+        self.status = 'active'
+
+    def to_incomplete_connection_dict(self):
+        """
+        This function returns what AirbyteDtoFactory.build_connection_dto craves
+        """
+        r = {
+            'name': self.group_name,
+            'prefix': self.prefix,
+            'syncCatalog': self.sync_catalog,
+            'schedule': self.schedule,
+            'status': self.status
+        }
+        return r
 
 
 class StreamDto:
-    """Data transfer object class for the stream, belongs to the connection abstraction"""
+    """
+    Data transfer object class for the stream, belongs to the connection abstraction
+    """
 
     def __init__(self):
         self.name = None
@@ -77,7 +141,9 @@ class StreamDto:
 
 
 class StreamConfigDto:
-    """Data transfer object class for the stream configuration, belongs to the connection abstraction"""
+    """
+    Data transfer object class for the stream configuration, belongs to the connection abstraction
+    """
 
     def __init__(self):
         self.sync_mode = None
@@ -88,15 +154,18 @@ class StreamConfigDto:
         self.selected = None
 
 
-class WorkspaaceDto:
-    """Data transfer object class for Workspace-type Airbyte abstractions"""
+class WorkspaceDto:
+    """
+    Data transfer object class for Workspace-type Airbyte abstractions
+    """
 
     def __init__(self):
         pass
 
+
 class AirbyteDtoFactory:
     """
-    Builds data transfer objects, each representing an abstraction inside the Airbyte architecture
+    Builds data transfer objects, each modeling an abstraction inside Airbyte
     """
     def __init__(self, source_definitions, destination_definitions):
         self.source_definitions = source_definitions
@@ -116,13 +185,17 @@ class AirbyteDtoFactory:
                 if destination.destination_name in secrets['destinations']:
                     if 'password' in destination.connection_configuration:
                         destination.connection_configuration['password'] = secrets['destinations'][destination.destination_name]['password']
+                    elif 'credentials_json' in destination.connection_configuration:
+                        destination.connection_configuration['credentials_json'] = \
+                        secrets['destinations'][destination.destination_name]['credentials_json']
 
     def build_source_dto(self, source: dict) -> SourceDto:
         """
         Builds a SourceDto object from a dict representing a source
         """
         r = SourceDto()
-        r.connection_configuration = source['connectionConfiguration']
+        if 'connectionConfiguration' in source:
+            r.connection_configuration = source['connectionConfiguration']
         r.name = source['name']
         r.source_name = source['sourceName']
         if 'sourceDefinitionId' in source:
@@ -131,16 +204,19 @@ class AirbyteDtoFactory:
             for definition in self.source_definitions['sourceDefinitions']:
                 if r.source_name == definition['name']:
                     r.source_definition_id = definition['sourceDefinitionId']
+            # TODO: handle exception where no sourceDefinitionId matches the provided source name
         if 'sourceId' in source:
             r.source_id = source['sourceId']
         if 'workspaceId' in source:
             r.workspace_id = source['workspaceId']
-        if 'tag' in source:
-            r.tag = source['tag']
-        # TODO: check for validity?
+        if 'tags' in source:
+            r.tags = source['tags']
         return r
 
     def build_destination_dto(self, destination):
+        """
+        Builds a DestinationDto object from a dict representing a source
+        """
         r = DestinationDto()
         r.connection_configuration = destination['connectionConfiguration']
         r.destination_name = destination['destinationName']
@@ -155,20 +231,51 @@ class AirbyteDtoFactory:
             r.destination_id = destination['destinationId']
         if 'workspaceId' in destination:
             r.workspace_id = destination['workspaceId']
-        if 'tag' in destination:
-            r.tag = destination['tag']
-        # TODO: check for validity?
+        if 'tags' in destination:
+            r.tags = destination['tags']
         return r
 
     def build_connection_dto(self, connection):
+        """
+        Builds a ConnectionDto from a dict representing a connection
+        """
         r = ConnectionDto()
-        r.connection_id = connection['connectionId']
-        r.name = connection['name']
-        r.prefix = connection['prefix']
-        r.source_id = connection['sourceId']
-        r.destination_id = connection['destinationId']
-        r.sync_catalog = connection['syncCatalog']
+        if 'prefix' in connection:
+            r.prefix = connection['prefix']
+        if 'connectionId' in connection:  # => connection is already defined in an Airbyte deployment
+            r.connection_id = connection['connectionId']
+        if 'sourceId' in connection:
+            r.source_id = connection['sourceId']
+        if 'sourceName' in connection:
+            r.source_name = connection['sourceName']
+        if 'destinationId' in connection:
+            r.destination_id = connection['destinationId']
+        if 'destinationName' in connection:
+            r.destination_name = connection['destinationName']
+        if 'name' in connection:
+            r.name = connection['name']
+        if 'syncCatalog' in connection:
+            r.sync_catalog = connection['syncCatalog']
+        if 'status' in connection:
+            r.status = connection['status']
+        if 'namespaceDefinition' in connection:
+            r.status = connection['namespaceDefinition']
         r.schedule = connection['schedule']
         r.status = connection['status']
-        # TODO: check for validity?
+        return r
+    
+    def build_connection_group_dto(self, connection_group):
+        """
+        Builds a ConnectionGroupDto from a dict representing a connection_group
+        Note: unlike the other DTO classes, ConnectionGroupDto doesn't represent an abstraction inside Airbyte
+        """
+        r = ConnectionGroupDto()
+        r.group_name = connection_group['groupName']
+        if 'syncCatalog' in connection_group:
+            r.sync_catalog = connection_group['syncCatalog']
+        r.schedule = connection_group['schedule']
+        r.status = connection_group['status']
+        r.source_tags = connection_group['sourceTags']
+        r.destination_tags = connection_group['destinationTags']
+        r.prefix = connection_group['prefix']
         return r
