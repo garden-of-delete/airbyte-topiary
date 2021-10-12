@@ -11,7 +11,6 @@ import argparse
 import utils
 from controller import Controller
 
-
 VALID_MODES = ['wipe', 'validate', 'sync']
 
 
