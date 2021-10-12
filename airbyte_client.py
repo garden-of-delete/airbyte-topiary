@@ -14,7 +14,7 @@ class AirbyteResponse:
         if self.status_code in RESPONSE_CODES:
             self.message = RESPONSE_CODES[response.status_code]
         else:
-            self.message = "Error: Client : Unrecognized response code"
+            self.message = "Error: Unrecognized response code"
         self.payload = response.json()
         self.ok = response.ok
         # TODO: include the full response object

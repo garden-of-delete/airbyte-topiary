@@ -33,6 +33,6 @@ def test_unrecognized_response_code():
     response.raise_for_status = raise_error
     airbyte_response = AirbyteResponse(response)
 
-    assert airbyte_response.message == "Unrecognized response code"
+    assert airbyte_response.message == "Error: Unrecognized response code"
     assert airbyte_response.payload['attribute'] == 'value'
     assert not airbyte_response.ok
