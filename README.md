@@ -1,21 +1,21 @@
-# Airbyte Tentacle
-Airbyte tentacle is an open-source configuration and deployment management tool for [Airbyte](https://github.com/airbytehq/airbyte). **As this tool is early in development, I *highly* recommend reading below before using the tool to avoid irreversible (potentially unexpected) changes to your Airbyte deployment.**
+# Airbyte Topiary
+Airbyte Topiary is an open-source configuration and deployment management tool for [Airbyte](https://github.com/airbytehq/airbyte). **As this tool is early in development, I *highly* recommend reading below before using the tool to avoid irreversible (potentially unexpected) changes to your Airbyte deployment.**
 
 # Releases
 No releases yet.
 
 # Setup
 1. Clone this repo to your working environment
-`git clone github.com/garden-of-delete/airbyte-tentacle`
+`git clone github.com/garden-of-delete/airbyte-topiary`
 2. Create a new Python3 virtual environment. For example, to use venv to create a virtual environment in your current working directory:
 `python3 -m venv .venv`
 Activate the environment with `. .venv/bin/activate`
 3. Install all requirements:
 `pip3 install requirements.txt`
-4. Run Tentacle. `python tentacle.py` will display help and usage.
+4. Run Topiary. `python topiary.py` will display help and usage.
 
 # Configuration as YAML
-Airbyte tentacle allows configuration for an airbyte deployment to be moved to and from yaml files through interaction with the Airbyte API. Provided .yml configuration is first validated, but care should be taken to ensure all the details are correct. Check the `examples/` directory to see some example configurations.
+Airbyte Topiary allows configuration for an airbyte deployment to be moved to and from yaml files through interaction with the Airbyte API. Provided .yml configuration is first validated, but care should be taken to ensure all the details are correct. Check the `examples/` directory to see some example configurations.
 
 ### Sources
 Sources require the following:  
@@ -51,8 +51,8 @@ Connections require the following:
     `timeUnit`: units of time used (`hours`, `days`, etc)  
 `status`: active or inactive. Note: an "active" connector with a schedule will start a sync attempt in Airbyte immediately upon creation.
 
-Optionally, a `syncCatalog` can also be specified. This monstrosity is specific to each source and contains the configuration for each of the streams in the connection. Since the `syncCatalog` as expected by the Airbyte API is not particularly human readable, tentacle provides some options here:
-- If a `syncCatalog` is not provided, tentacle will retrieve the default sync catalog from the source and use that. Note, the default syncCatalog has all available streams selected with the default sync mode (usually "Full Refresh - Overwrite/Append")
+Optionally, a `syncCatalog` can also be specified. This monstrosity is specific to each source and contains the configuration for each of the streams in the connection. Since the `syncCatalog` as expected by the Airbyte API is not particularly human readable, Topiary provides some options here:
+- If a `syncCatalog` is not provided, Topiary will retrieve the default sync catalog from the source and use that. Note, the default syncCatalog has all available streams selected with the default sync mode (usually "Full Refresh - Overwrite/Append")
 - To modify the `syncCatalog` for an existing connection, I would recommend first syncing the connection to yaml before making changes and applying back to Airbyte. Read the "**The Sync Workflow**" section below to see how to do this.
 
 A connection connecting a GitHub source to a BigQuery destination might look something like this (no SyncCatalog provided, so defaults will be used):
@@ -68,7 +68,7 @@ A connection connecting a GitHub source to a BigQuery destination might look som
 ```
 
 # Workflows
-Airbyte tentacle supports a number of workflows designed to make managing Airbyte deployments at scale easier. These are:
+Airbyte Topiary supports a number of workflows designed to make managing Airbyte deployments at scale easier. These are:
 - **sync**: applies configuration provided as yml to an Airbyte deployment, OR retrieves the configuration of an Airbyte deployment and writes it to .yml
 - **wipe**: deletes the specified connectors (sources, destinations) and associated connections / configuration
 - **validate**: validates all sources and destinations
@@ -76,13 +76,13 @@ Airbyte tentacle supports a number of workflows designed to make managing Airbyt
 ## The Sync Workflow
 All the sync workflows described below are accessed through the **sync** master mode like so:
 
-`python tentacle.py sync ...`
+`python topiary.py sync ...`
 
 In all cases, a configuration origin, which follows the `sync` command, and a `--target` are required.
 
-Tentacle will use the .yaml or .yml file extensions following the `source` and `--target` arguments to choose the right sync workflow.
+Topiary will use the .yaml or .yml file extensions following the `source` and `--target` arguments to choose the right sync workflow.
 
-During setup, Airbyte creates a default workspace called 'default'. Tentacle allows the user to specify an alternative existing workspace by name using the optional `--workspace` argument, followed by the name of the workspace.
+During setup, Airbyte creates a default workspace called 'default'. Topiary allows the user to specify an alternative existing workspace by name using the optional `--workspace` argument, followed by the name of the workspace.
 
 ### Sync yaml to Airbyte
 
@@ -98,27 +98,27 @@ These optional arguments can be used in combination to define what to apply the 
 
 Basic usage could be something like:
 
-`python tentacle.py sync config.yml --target http://123.456.789.0:8081 --all`
+`python topiary.py sync config.yml --target http://123.456.789.0:8081 --all`
 
-Almost all sources and destinations will have associated secrets. Tentacle ignores any secrets specified in the source config.yml. Secrets are specified separately using the `--secrets` argument, followed by a .yaml file. For example:
+Almost all sources and destinations will have associated secrets. topiary ignores any secrets specified in the source config.yml. Secrets are specified separately using the `--secrets` argument, followed by a .yaml file. For example:
 
-`python tentacle.py sync config.yml --target http://123.456.789.0:8081 --secrets secrets.yml --all`
+`python topiary.py sync config.yml --target http://123.456.789.0:8081 --secrets secrets.yml --all`
 
 There are a number of additional optional parameters that modify how a sync operation is carried out:
 - `--wipe` removes all sources, destinations, and connectors **before** applying config.yml
 - `--backup` followed by a filename. Dumps the full configuration of airbyte to the specified file **before** applying `--wipe` and config.yml
 - `--validate` validates the sources, destinations, and connections on the destination Airbyte deployment **after** applying changes.
 
-Used together, a realistic invocation of tentacle might look something like:
-`python tentacle.py sync config.yml --target http://123.456.789.0:8081 --secrets secrets.yml --all --validate --backup backup_config.yml`
+Used together, a realistic invocation of topiary might look something like:
+`python topiary.py sync config.yml --target http://123.456.789.0:8081 --secrets secrets.yml --all --validate --backup backup_config.yml`
 
 ### Modifying existing sources and destinations
-If the yaml file specifies connectors with valid `sourceId`, `destinationId`, or `connectionId` matching matching Airbyte deployment, or failing that, valid `name`s, then tentacle will attempt to modify the existing source/destination/connection instead of creating a new one. 
+If the yaml file specifies connectors with valid `sourceId`, `destinationId`, or `connectionId` matching matching Airbyte deployment, or failing that, valid `name`s, then topiary will attempt to modify the existing source/destination/connection instead of creating a new one. 
 
 ### Sync deployment to yaml
 An existing Airbyte deployment can be written to a .yaml by following the `--target` argument with a filename having the .yaml or .yml extension. For example:
 
-`python tentacle.py sync http://123.456.789.0:8081 --target my_deployment.yml`
+`python topiary.py sync http://123.456.789.0:8081 --target my_deployment.yml`
 
 will write the configuration of all sources, destinations, and connections to `my_deployment.yml`.
 
@@ -127,7 +127,7 @@ Note in this case, no `--secrets` file is specified, since it has no meaning in 
 ## Wipe a deployment
 The `wipe` mode deletes sources, destinations, connections or any combination in an existing Airbyte deployment.
 
-`python tentacle.py wipe http://123.456.789.0:8081 --all`
+`python topiary.py wipe http://123.456.789.0:8081 --all`
 
 As with `sync`ing a .yaml file to a deployment, these optional arguments can be used in combination to define what to apply the wipe operation to:
 - `--sources`
@@ -140,7 +140,7 @@ As with `sync`ing a .yaml file to a deployment, these optional arguments can be 
 ## Validate a deployment
 The `validate` mode validates sources, destinations, connections or any combination in an existing Airbyte deployment.
 
-`python tentacle.py validate http://123.456.789.0:8081 --all`
+`python topiary.py validate http://123.456.789.0:8081 --all`
 
 As with `wipe` mode, these optional arguments can be used in combination to define what to apply the `validate` operation to:
 - `--sources`
@@ -149,7 +149,7 @@ As with `wipe` mode, these optional arguments can be used in combination to defi
 - `--all` (same as `--sources --destinations --connections`)
 
 # Contributing
-This is a small project i've been building in my free time, so there isn't much structure needed around contributing (for now). Check the issue list, open an issue for your change if needed, fork the project, modify it, then open a PR :)
+This is a small project I've been building in my free time, so there isn't much structure needed around contributing (for now). Check the issue list, open an issue for your change if needed, fork the project, modify it, then open a PR :)
 
 # Acknowledgements
 Thanks to Abhi and the Airbyte team for being responsive to questions and feedback during the development process. Also big thanks to the team at Preset.io for supporting the concept and my use of Airbyte while employed there.
