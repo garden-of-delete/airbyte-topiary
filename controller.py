@@ -4,6 +4,7 @@ from airbyte_dto_factory import *
 import utils
 import yaml
 
+
 class Controller:
     """Communicates with the user. Provides methods to execute the tasks for each workflow."""
     def __init__(self):
