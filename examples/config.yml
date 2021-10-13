@@ -1,0 +1,36 @@
+# This config file creates (or modifies) two new sources (one Slack and one GitHub), a destination, and creates a
+# connection with default settings between the GitHub source and the BigQuery destination
+sources:
+  - name: superset-slack
+    sourceName: Slack
+    connectionConfiguration:
+      start_date: '2015-01-01T00:00:00Z'
+      api_token: '**********'
+      lookback_window: 7
+      join_channels: True
+  - name: apache/superset
+    sourceName: GitHub
+    connectionConfiguration:
+      access_token: '**********'
+      repository: apache/superset
+      start_date: '2017-01-01T00:00:00Z'
+
+destinations:
+  - connectionConfiguration:
+      big_query_client_buffer_size_mb: 15
+      credentials_json: '**********'
+      dataset_id: test
+      dataset_location: US
+      project_id: bigquery-project-id
+    destinationName: BigQuery
+    name: community-data-bq
+
+connections:
+  - sourceName: apache/superset
+    destinationName: community-data-bq
+    prefix: 'github_superset_'
+    namespaceDefinition: destination
+    schedule:
+        units: 24
+        timeUnit: hours
+    status: 'inactive'
