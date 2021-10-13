@@ -21,19 +21,30 @@ class AirbyteResponse:
 
 
 class AirbyteClient:
-    """Airbyte interface"""
+    """
+    Handles interactions with the Airbyte API
+    """
     def __init__(self, url):
-        self.airbyte_url = url.strip('/') + '/'  # TODO: a little awk
+        self.airbyte_url = url.strip('/') + '/'
+        print('API connection is healthy: ' + repr(self.health_check().ok))
 
     def get(self, relative_url) -> AirbyteResponse:
         route = self.airbyte_url + relative_url
-        r = requests.get(route)
+        try:
+            r = requests.get(route)
+        except:
+            print('Error: Unable to connect to the Airbyte API at: ' + self.airbyte_url + ' using route ' + route)
+            exit(2)
         return AirbyteResponse(r)
 
     def post(self, relative_url, payload) -> AirbyteResponse:
         route = self.airbyte_url + relative_url
         r = requests.post(route, payload)
         return AirbyteResponse(r)
+
+    def health_check(self):
+        """Route: GET /v1/openapi"""
+        return self.get('api/v1/health')
 
     def get_workspace_by_slug(self, slug='default'):
         """Route: POST /v1/workspaces/get_by_slug"""
