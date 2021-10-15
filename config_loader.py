@@ -1,30 +1,30 @@
 import yaml
 
-class Field:
+SOURCE_FIELDS = {  # {fieldName: required}
+    "sourceId": False,
+    "name": True,
+    "sourceName": True,
+    "connectionConfiguration": True,
+    "syncCatalog": False
+}
 
-    def __init__(self, name_ = None, required_ = None):
-        self.name = name_
-        self.required = required_
+DESTINATION_FIELDS = {  # {fieldName: required}
+    "destinationId": False,
+    "name": True,
+    "destinationName": True,
+    "connectionConfiguration": True,
+}
 
+CONNECTION_FIELDS = {  # {fieldName: required}
+    "sourceName": True,
+    "destinationName": True,
+    "prefix": False,
+    "namespaceDefinition": False,
+    "schedule": True,
+    "status": True,
+    "syncCatalog": False
+}
 
-SOURCE_FIELDS = [  # (fieldName, required)
-    ("sourceId", False),
-    ("name", True),
-    ("SourceName", True),
-    ("connectionConfiguration", True),
-    ("syncCatalog", False),
-]
-
-DESTINATION_FIELDS = [  # (fieldName, required)
-    ("destinationId", False),
-    ("name", True),
-    ("destinationName", True),
-    ("connectionConfiguration", True),
-]
-
-CONNECTION_FIELDS = [  # (fieldName, required)
-
-]
 
 class ConfigException(Exception):
     pass
@@ -76,11 +76,8 @@ class ConfigLoader:
     def check_connection(self, connection_dict):
         pass
 
-    def check_required(self, input_dict):
-        pass
-
-    def check_unique(self, input_dict):
-        pass
+    def check_required(self, input_dict, required_list):
+        return set(required_list.keys()).issubset(set(input_dict.keys()))
 
     def check_types(self, input_dict, expected_type):
         pass
