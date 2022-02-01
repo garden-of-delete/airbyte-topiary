@@ -1,0 +1,55 @@
+connections: []
+destinations:
+- connectionConfiguration:
+    basic_normalization: true
+    database: postgres
+    host: devrel-rds.cxiotftzsypc.us-west-2.rds.amazonaws.com
+    password: '**********'
+    port: 5432
+    schema: demo
+    username: devrel_master
+  destinationDefinitionId: 25c5221d-dce2-4163-ade9-739ef790f503
+  destinationId: a41cb2f8-fcce-4c91-adfe-37c4586609f5
+  destinationName: Postgres
+  name: devrel-rds
+  workspaceId: 5ae6b09b-fdec-41af-aaf7-7d94cfc33ef6
+sources:
+- connectionConfiguration:
+    access_token: '**********'
+    repository: apache/superset
+  name: apache/superset
+  sourceDefinitionId: ef69ef6e-aa7f-4af1-a01d-ef775033524e
+  sourceId: def25ce1-b7dd-476f-8051-1908b8a6da32
+  sourceName: GitHub
+  workspaceId: 5ae6b09b-fdec-41af-aaf7-7d94cfc33ef6
+- connectionConfiguration:
+    access_token: '**********'
+    repository: preset-io/superset
+  name: preset-io/superset
+  sourceDefinitionId: ef69ef6e-aa7f-4af1-a01d-ef775033524e
+  sourceId: 7d95ec85-47c6-42d4-a7a2-8e5c22c810d2
+  sourceName: GitHub
+  workspaceId: 5ae6b09b-fdec-41af-aaf7-7d94cfc33ef6
+- connectionConfiguration:
+    start_date: '2015-01-01T00:00:00Z'
+    token: '**********'
+  name: apache superset slack
+  sourceDefinitionId: 41375467-61ae-4204-8e38-e2b8b7365f23
+  sourceId: b63274c3-6da3-4584-b6f7-6b74cc30bd94
+  sourceName: Slack
+  workspaceId: 5ae6b09b-fdec-41af-aaf7-7d94cfc33ef6
+
+@pytest.fixture
+def dummy_source_dto():
+    """
+    Creates a dummy SourceDto
+    """
+    source = SourceDto()
+    source.source_definition_id = 'ef69ef6e-aa7f-4af1-a01d-ef775033524e'
+    source.source_id = '7d95ec85-47c6-42d4-a7a2-8e5c22c810d2'
+    source.workspace_id = 'f3b9e848-790c-4cdd-a475-5c6bb156dc10'
+    source.connection_configuration = {}
+    source.name = 'apache/superset'
+    source.source_name = 'GitHub'
+    source.tag = 'tag1'
+    return source

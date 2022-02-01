@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-This is a simple, open-source tool designed to help manage Airbyte deployments at scale through via the API.
+This is a simple, open-source tool designed to help manage Airbyte deployments through via the API.
 """
 
 __author__ = "Robert Stolz"
