@@ -1,5 +1,3 @@
-import yaml
-
 SOURCE_FIELDS = {  # {fieldName: required}
     "sourceId": False,
     "name": True,
@@ -26,24 +24,31 @@ CONNECTION_FIELDS = {  # {fieldName: required}
 }
 
 
-class ConfigLoader:
+class ConfigValidator:
 
     def __init__(self):
         self.config_is_good = True
 
-    def load_config(self, yaml_config):
-        config = yaml.safe_load(yaml_config)
+    def validate_config(self, config: dict) -> bool:
         if 'sources' in config:
             for source in config['sources']:
-                self.check_source(source)
+                if not self.check_source(source):  # if source is not valid
+                    print("Error: invalid source")
+                    print(repr(source))
+                    self.config_is_good = False
         if 'destinations' in config:
             for destination in config['destinations']:
-                self.check_destination(destination)
+                if not self.check_destination(destination):
+                    print("Error: invalid destination")
+                    print(repr(destination))
+                    self.config_is_good = False
         if 'connections' in config:
             if not ('sources' in config and 'destinations' in config):
-                print("Error: Connections can't be defined without at least one source and one destination")
+                print("Error: Connections can't be defined without at least one valid source and one valid destination")
+                self.config_is_good = False
+        return self.config_is_good
 
-    def load_secrets(self, yaml_secrets):  # TODO: implement
+    def check_secrets(self, secrets):  # TODO: implement
         pass
 
     def check_source(self, source_dict) -> bool:
@@ -55,11 +60,8 @@ class ConfigLoader:
     def check_connection(self, connection_dict) -> bool:
         return self.check_required(connection_dict, CONNECTION_FIELDS)
 
-    def check_required(self, input_dict: dict, parameters) -> bool:
+    def check_required(self, input_dict: dict, parameters: dict) -> bool:
         test_a = set([x for x in parameters.keys() if parameters[x] is True])
         test_b = set(input_dict.keys())
-        result = test_a.issubset(test_b)
+        result = test_a.issubset(test_b)  # required parameters should be a subset of provided parameters
         return result
-
-    def check_types(self, input_dict, expected_type):
-        pass

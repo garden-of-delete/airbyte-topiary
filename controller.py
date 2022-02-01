@@ -48,7 +48,7 @@ class Controller:
             # secrets = config_loader.load_config(open(args.origin, 'r'))
             secrets = yaml.safe_load(open(args.secrets, 'r'))  # TODO: if no --secrets specified, skip
         else:
-            print("Warning: Reading yaml config but --secrets not specified.")
+            print("Warning: Reading yaml config but --secrets not specified. Is this intentional?")
         return yaml_config, secrets
 
     def get_definitions(self, client):

@@ -10,6 +10,7 @@ __license__ = "MIT"
 import argparse
 import utils
 from controller import Controller
+from config_validator import ConfigValidator
 
 VALID_MODES = ['wipe', 'validate', 'sync']
 
@@ -31,6 +32,10 @@ def main(args):
             print("Output written to: " + args.target)
         else:  # yaml to deployment sync workflow
             yaml_config, secrets = controller.read_yaml_config(args)
+            config_validator = ConfigValidator()  # TODO: refactor
+            if not config_validator.validate_config(yaml_config):
+                print("Error: Invalid config provided as yaml. Exiting...")
+                exit(2)
             dtos_from_config = controller.build_dtos_from_yaml_config(yaml_config, secrets)
             if args.backup_file:
                 airbyte_model.write_yaml(args.backup_file)
