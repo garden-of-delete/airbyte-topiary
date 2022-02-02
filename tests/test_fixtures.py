@@ -1,6 +1,7 @@
 import pytest
 from airbyte_dto_factory import *
 from airbyte_config_model import *
+from config_validator import ConfigValidator
 
 @pytest.fixture
 def dummy_source_dto():
@@ -245,3 +246,8 @@ def dummy_secrets_dict():
         }
     }
     return secrets_dict
+
+
+@pytest.fixture
+def dummy_config_loader():
+    return ConfigValidator()
