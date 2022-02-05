@@ -1,19 +1,20 @@
 from airbyte_config_model import AirbyteConfigModel
 from airbyte_client import AirbyteClient
-from airbyte_dto_factory import *
+from airbyte_dto_factory import AirbyteDtoFactory
 import utils
 import yaml
 
 
 class Controller:
     """Communicates with the user. Provides methods to execute the tasks for each workflow."""
+
     def __init__(self):
         self.dto_factory = None
 
     def instantiate_dto_factory(self, source_definitions, destination_definitions):
         self.dto_factory = AirbyteDtoFactory(source_definitions,destination_definitions)
 
-    def instantiate_client(self, args):
+    def instantiate_client(self, args) -> AirbyteClient:
         # if origin is a deployment and target is not specified
         if not utils.is_yaml(args.origin) and args.target is None:
             client = AirbyteClient(args.origin)
@@ -37,15 +38,13 @@ class Controller:
 
     def read_yaml_config(self, args):
         """get config from config.yml"""
+
         secrets = None
         if utils.is_yaml(args.origin):
-            # yaml_config = config_loader.load_config(open(args.origin, 'r'))
             yaml_config = yaml.safe_load(open(args.origin, 'r'))
         else:
-            # yaml_config = config_loader.load_config(open(args.origin, 'r'))
             yaml_config = yaml.safe_load(open(args.target, 'r'))
         if args.secrets:
-            # secrets = config_loader.load_config(open(args.origin, 'r'))
             secrets = yaml.safe_load(open(args.secrets, 'r'))  # TODO: if no --secrets specified, skip
         else:
             print("Warning: Reading yaml config but --secrets not specified. Is this intentional?")
@@ -53,6 +52,7 @@ class Controller:
 
     def get_definitions(self, client):
         """Retrieves source and destination definitions for configured sources"""
+
         print("Retrieving source and destination definitions from: " + client.airbyte_url)
         available_sources = client.get_source_definitions().payload
         available_destinations = client.get_destination_definitions().payload
@@ -60,6 +60,7 @@ class Controller:
 
     def get_airbyte_configuration(self, client, workspace):
         """Retrieves the configuration from an airbyte deployment and returns an AirbyteConfigModel representing it"""
+
         print("Retrieving Airbyte configuration from: " + client.airbyte_url)
         configured_sources = client.get_configured_sources(workspace).payload['sources']
         configured_destinations = client.get_configured_destinations(workspace).payload['destinations']
@@ -76,8 +77,9 @@ class Controller:
             airbyte_model.connections[connection_dto.connection_id] = connection_dto
         return airbyte_model
 
-    def get_workspace(self, args, client):
+    def get_workspace(self, args, client) -> str:
         """Retrieves workspace specified by the --workspace argument, or the default workspace otherwise"""
+
         if args.workspace_slug:
             workspace = client.get_workspace_by_slug(args.workspace_slug).payload
         else:
@@ -86,13 +88,14 @@ class Controller:
 
     def build_dtos_from_yaml_config(self, yaml_config, secrets):
         """Creates a dict of new DTOs by parsing the user specified .yml config file"""
+
         new_dtos = {}
         if 'global' in yaml_config.keys():
             for item in yaml_config['global']:
-                pass
+                pass  # TODO: placeholder for global configuration
         if 'workspaces' in yaml_config.keys():
             for item in yaml_config['workspaces']:
-                pass
+                pass  # TODO: placeholder for multi-workspace support
         if 'sources' in yaml_config.keys():
             new_sources = []
             for item in yaml_config['sources']:
@@ -118,7 +121,14 @@ class Controller:
         self.dto_factory.populate_secrets(secrets, new_dtos)
         return new_dtos
 
-    def sync_sources_to_deployment(self, airbyte_model, client, workspace, dtos_from_config):
+    def sync_sources_to_deployment(self,
+                                    airbyte_model: AirbyteConfigModel,
+                                    client: AirbyteClient,
+                                    workspace: str,
+                                    dtos_from_config: dict):
+        """Applies destinations defined by the provided dict of dtos to a proved airbyte deployment in the specified
+            workspace using the provided client
+        """
         if 'sources' in dtos_from_config:
             for new_source in dtos_from_config['sources']:
                 if airbyte_model.has(new_source): # source already exists by name or id in the deployment
@@ -144,7 +154,15 @@ class Controller:
         else:
             print('Warning: --sources option used, but no sources found in provided config.yml')
 
-    def sync_destinations_to_deployment(self, airbyte_model, client, workspace, dtos_from_config):
+    def sync_destinations_to_deployment(self,
+                                        airbyte_model: AirbyteConfigModel,
+                                        client: AirbyteClient,
+                                        workspace: str,
+                                        dtos_from_config: dict):
+        """Applies destinations defined by the provided dict of dtos to a proved airbyte deployment in the specified
+            workspace using the provided client
+        """
+
         if 'destinations' in dtos_from_config:
             for new_destination in dtos_from_config['destinations']:
                 if airbyte_model.has(new_destination):  # destination already exists by name or id in the deployment
@@ -170,7 +188,10 @@ class Controller:
         else:
             print('Warning: --destinations option used, but no destinations found in provided config.yml')
 
-    def sync_connections_to_deployment(self, airbyte_model, client, dtos_from_config):
+    def sync_connections_to_deployment(self,
+                                        airbyte_model: AirbyteConfigModel,
+                                        client: AirbyteClient,
+                                        dtos_from_config: dict):
         """
         Applies a collection of connectionDtos and/or connectionGroupDtos (experimental), to an airbyte deployment
         """

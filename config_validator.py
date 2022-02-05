@@ -1,4 +1,4 @@
-SOURCE_FIELDS = {  # {fieldName: required}
+SOURCE_FIELDS = {  # {fieldName: is_required}
     "sourceId": False,
     "name": True,
     "sourceName": True,
@@ -6,14 +6,14 @@ SOURCE_FIELDS = {  # {fieldName: required}
     "syncCatalog": False
 }
 
-DESTINATION_FIELDS = {  # {fieldName: required}
+DESTINATION_FIELDS = {  # {fieldName: is_required}
     "destinationId": False,
     "name": True,
     "destinationName": True,
     "connectionConfiguration": True,
 }
 
-CONNECTION_FIELDS = {  # {fieldName: required}
+CONNECTION_FIELDS = {  # {fieldName: is_required}
     "sourceName": True,
     "destinationName": True,
     "prefix": False,
@@ -30,6 +30,13 @@ class ConfigValidator:
         self.config_is_good = True
 
     def validate_config(self, config: dict) -> bool:
+        """Validates that a config read from yaml is valid. Validity here means:
+            - all sources have required information specified (see above or Airbyte API docs)
+            - all destinations have required information specified
+            - all connections refer to a valid source and a valid destination
+        Not to be confused with the unrelated --validate command line argument
+        """
+
         if 'sources' in config:
             for source in config['sources']:
                 if not self.check_source(source):  # if source is not valid
@@ -42,13 +49,12 @@ class ConfigValidator:
                     print("Error: invalid destination")
                     print(repr(destination))
                     self.config_is_good = False
-        if 'connections' in config:
-            if not ('sources' in config and 'destinations' in config):
-                print("Error: Connections can't be defined without at least one valid source and one valid destination")
-                self.config_is_good = False
+        if 'connections' in config and not ('sources' in config and 'destinations' in config):
+            print("Error: Connections can't be defined without at least one valid source and one valid destination")
+            self.config_is_good = False
         return self.config_is_good
 
-    def check_secrets(self, secrets):  # TODO: implement
+    def check_secrets(self, secrets):  # TODO: On hold for secrets v2
         pass
 
     def check_source(self, source_dict) -> bool:
@@ -61,7 +67,11 @@ class ConfigValidator:
         return self.check_required(connection_dict, CONNECTION_FIELDS)
 
     def check_required(self, input_dict: dict, parameters: dict) -> bool:
+        """
+        Checks that required parameters are a subset of provided parameters for the given source or destination
+        """
+
         test_a = set([x for x in parameters.keys() if parameters[x] is True])
         test_b = set(input_dict.keys())
-        result = test_a.issubset(test_b)  # required parameters should be a subset of provided parameters
+        result = test_a.issubset(test_b)
         return result
