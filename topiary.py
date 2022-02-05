@@ -9,6 +9,8 @@ __license__ = "MIT"
 
 import argparse
 import utils
+from airbyte_client import AirbyteClient
+from airbyte_config_model import AirbyteConfigModel
 from controller import Controller
 from config_validator import ConfigValidator
 
@@ -17,13 +19,13 @@ VALID_MODES = ['wipe', 'validate', 'sync']
 
 def main(args):
     """Handles arguments and setup tasks. Invokes controller methods to carry out the specified workflow"""
-    # setup
-    controller = Controller()
-    client = controller.instantiate_client(args)
-    definitions = controller.get_definitions(client)
+    controller: Controller = Controller()
+    config_validator: ConfigValidator = ConfigValidator()
+    client: AirbyteClient = controller.instantiate_client(args)
+    definitions: dict = controller.get_definitions(client)
     controller.instantiate_dto_factory(definitions['source_definitions'], definitions['destination_definitions'])
-    workspace = controller.get_workspace(args, client)
-    airbyte_model = controller.get_airbyte_configuration(client, workspace)
+    workspace: str = controller.get_workspace(args, client)
+    airbyte_model: AirbyteConfigModel = controller.get_airbyte_configuration(client, workspace)
 
     # sync workflow
     if args.mode == 'sync':
@@ -32,7 +34,6 @@ def main(args):
             print("Output written to: " + args.target)
         else:  # yaml to deployment sync workflow
             yaml_config, secrets = controller.read_yaml_config(args)
-            config_validator = ConfigValidator()  # TODO: refactor
             if not config_validator.validate_config(yaml_config):
                 print("Error: Invalid config provided as yaml. Exiting...")
                 exit(2)
@@ -71,7 +72,8 @@ def main(args):
         if args.destinations or args.all:
             controller.validate_destinations(airbyte_model, client)
         if args.connections or args.all:
-            pass  # TODO: implement controller.wipe_connections
+            #  Q: what does it mean to validate a connection beyond validating its source and destination?
+            pass  # TODO: Implement Controller.validate_connections ?
     else:
         print("main: unrecognized mode " + args.mode)
 

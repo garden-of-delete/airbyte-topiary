@@ -2,6 +2,7 @@ class SourceDto:
     """
     Data transfer object class for Source-type Airbyte abstractions
     """
+
     def __init__(self):
         self.source_definition_id = None
         self.source_id = None
@@ -18,6 +19,7 @@ class SourceDto:
         """
         sends this dto object to a dict formatted as a payload
         """
+
         r = {}
         r['sourceDefinitionId'] = self.source_definition_id
         r['sourceId'] = self.source_id
@@ -32,6 +34,7 @@ class DestinationDto:
     """
     Data transfer object class for Destination-type Airbyte abstractions
     """
+
     def __init__(self):
         self.destination_definition_id = None
         self.destination_id = None
@@ -46,8 +49,9 @@ class DestinationDto:
 
     def to_payload(self):
         """
-        sends this dto object to a dict formatted as a payload
+        Sends this dto object to a dict formatted as a payload
         """
+
         r = {}
         r['destinationDefinitionId'] = self.destination_definition_id
         r['destinationId'] = self.destination_id
@@ -62,6 +66,7 @@ class ConnectionDto:
     """
     Data transfer object class for Connection-type Airbyte abstractions
     """
+
     def __init__(self):
         self.connection_id = None
         self.name = 'default'
@@ -93,9 +98,8 @@ class ConnectionDto:
 
 
 class ConnectionGroupDto:
-    """
-    Data transfer object class for connection groups, each one representing a set of connections
-    Note, Airbyte does not have this abstraction internally
+    """Data transfer object class for connection groups, each one representing a set of connections
+    Note, Airbyte does not have this abstraction internally.
 
     ConnectionGroupDto also does not have a to_payload method, as it will never need to be written to .yml,
     or interact directly with the client, only read. Instead, to_incomplete_connection_dict sends the
@@ -115,6 +119,7 @@ class ConnectionGroupDto:
         """
         This function returns what AirbyteDtoFactory.build_connection_dto craves
         """
+
         r = {
             'name': self.group_name,
             'prefix': self.prefix,
@@ -159,20 +164,18 @@ class WorkspaceDto:
     Data transfer object class for Workspace-type Airbyte abstractions
     """
 
-    def __init__(self):
-        pass
-
 
 class AirbyteDtoFactory:
     """
     Builds data transfer objects, each modeling an abstraction inside Airbyte
     """
+
     def __init__(self, source_definitions, destination_definitions):
         self.source_definitions = source_definitions
         self.destination_definitions = destination_definitions
 
     def populate_secrets(self, secrets, new_dtos):
-        # TODO: Find a better way to deal with unpredictably named secrets
+        # TODO: Find a better way to deal with unpredictable naming in secrets v2
         if 'sources' in new_dtos:
             for source in new_dtos['sources']:
                 if source.source_name in secrets['sources']:
@@ -193,6 +196,7 @@ class AirbyteDtoFactory:
         """
         Builds a SourceDto object from a dict representing a source
         """
+
         r = SourceDto()
         if 'connectionConfiguration' in source:
             r.connection_configuration = source['connectionConfiguration']
@@ -217,6 +221,7 @@ class AirbyteDtoFactory:
         """
         Builds a DestinationDto object from a dict representing a source
         """
+
         r = DestinationDto()
         r.connection_configuration = destination['connectionConfiguration']
         r.destination_name = destination['destinationName']
@@ -239,6 +244,7 @@ class AirbyteDtoFactory:
         """
         Builds a ConnectionDto from a dict representing a connection
         """
+
         r = ConnectionDto()
         if 'prefix' in connection:
             r.prefix = connection['prefix']
@@ -269,6 +275,7 @@ class AirbyteDtoFactory:
         Builds a ConnectionGroupDto from a dict representing a connection_group
         Note: unlike the other DTO classes, ConnectionGroupDto doesn't represent an abstraction inside Airbyte
         """
+
         r = ConnectionGroupDto()
         r.group_name = connection_group['groupName']
         if 'syncCatalog' in connection_group:

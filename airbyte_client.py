@@ -24,6 +24,7 @@ class AirbyteClient:
     """
     Handles interactions with the Airbyte API
     """
+
     def __init__(self, url):
         self.airbyte_url = url.strip('/') + '/'
         print('API connection is healthy: ' + repr(self.health_check().ok))

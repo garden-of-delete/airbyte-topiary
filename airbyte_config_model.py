@@ -27,6 +27,7 @@ class AirbyteConfigModel:
         """
         Uses the name of a DTO object to return the associated uuid, or None if not found
         """
+
         for x in {**self.sources, **self.destinations, **self.connections}.values():
             if x.get_identity()[1] == dto_name:
                 return x.get_identity()[0]
@@ -41,6 +42,7 @@ class AirbyteConfigModel:
 
     def wipe_sources(self, client):
         """Removes all sources in self.sources from the deployment and the model"""
+
         # TODO: delete_sources would ideally return an AirbyteResponse and not a bool.
         removed = []
         for source in self.sources.values():
@@ -53,6 +55,7 @@ class AirbyteConfigModel:
 
     def wipe_destinations(self, client):
         """Removes all destinations in self.destinations from deployment and the model"""
+
         removed = []
         for destination in self.destinations.values():
             if client.delete_destination(destination):
@@ -64,6 +67,7 @@ class AirbyteConfigModel:
 
     def wipe_connections(self, client):
         """Removes all connections in self.connections from deployment and the model"""
+
         removed = []
         for connection in self.connections.values():
             if client.delete_connection(connection):
@@ -75,6 +79,7 @@ class AirbyteConfigModel:
 
     def validate(self, client):
         """this function validates the model and all included connectors"""
+
         print("Validating connectors...")
         for source in self.sources.values():
             response = client.check_source_connection(source).payload
